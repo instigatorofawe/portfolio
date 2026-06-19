@@ -1,0 +1,38 @@
+:root {
+	/* Type roles */
+	--font-serif: 'Source Serif 4', 'Noto Serif SC', Georgia, serif;
+	--font-sans: 'Lato', 'Noto Serif SC', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+	--font-display: 'Montserrat', system-ui, sans-serif;
+
+	/* Color */
+	--bg: #fcfcfb;
+	--ink: #1a1a1a;
+	--muted: #6b6b66;
+	--accent: #7a2e2e; /* oxblood — headings & branding */
+	--link: #2c4a8a; /* cobalt — link text */
+	--hairline: rgba(0, 0, 0, 0.08);
+
+	/* Type scale (major third, 1.25 ratio) */
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.25rem;
+	--text-xl: 1.563rem;
+	--text-2xl: 1.953rem;
+	--text-3xl: 2.441rem;
+
+	/* Spacing scale (0.25rem / 4px base) */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-6: 1.5rem;
+	--space-8: 2rem;
+
+	/* Component sizes */
+	--nav-height: 3.125rem;
+	--left-container-width: 14rem;
+	--right-container-width: 32rem;
+	--container-gap: 5rem;
+	--full-container-width: 51rem;
+}

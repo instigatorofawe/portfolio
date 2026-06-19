@@ -1,0 +1,33 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"rewriteRelativeImportExtensions": true,
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler"
+	},
+	// `exclude` replaces (does not merge with) the extended config's, so the
+	// SvelteKit service-worker defaults are repeated here alongside the
+	// generated wasm-bindgen glue in src/lib/pkg, which isn't worth checking.
+	"exclude": [
+		"node_modules/**",
+		"src/service-worker.js",
+		"src/service-worker/**/*.js",
+		"src/service-worker.ts",
+		"src/service-worker/**/*.ts",
+		"src/service-worker.d.ts",
+		"src/service-worker/**/*.d.ts",
+		"src/lib/pkg/**"
+	]
+	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
+	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
+	//
+	// To make changes to top-level options such as include and exclude, we recommend extending
+	// the generated config; see https://svelte.dev/docs/kit/configuration#typescript
+}

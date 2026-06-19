@@ -1,0 +1,78 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: var(--ink);
+	font-family: var(--font-serif);
+	font-weight: 600;
+	margin: 0 0 var(--space-4);
+}
+
+main h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: var(--accent);
+	font-family: var(--font-serif);
+	font-weight: 600;
+	margin: 0 0 var(--space-4);
+}
+
+p {
+	color: var(--ink);
+	font-family: var(--font-sans);
+	font-weight: 300;
+	text-align: justify;
+	margin: 0 0 var(--space-4);
+}
+
+h1 {
+	font-size: var(--text-2xl);
+}
+
+h2 {
+	font-size: var(--text-xl);
+}
+
+h3 {
+	font-size: var(--text-lg);
+}
+
+h4 {
+	font-size: var(--text-base);
+}
+
+h5 {
+	font-size: var(--text-base);
+}
+
+h6 {
+	font-size: var(--text-sm);
+}
+
+p {
+	font-family: var(--font-sans);
+	font-size: var(--text-base);
+}
+
+a {
+	color: var(--link);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+main {
+	max-width: var(--full-container-width);
+	font-family: var(--font-sans);
+}
+
+main p {
+	line-height: 1.45;
+}
