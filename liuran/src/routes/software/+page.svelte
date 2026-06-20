@@ -39,7 +39,6 @@
 				Precomputed tables of equities and matchup probabilities enable fast solutions.
 			</p>
 		</li>
-		<ul></ul>
 	</ul>
 </main>
 

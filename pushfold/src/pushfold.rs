@@ -1,70 +1,94 @@
+use crate::constants::*;
 use crate::util::*;
 use wasm_bindgen::prelude::*;
 
-fn bu_infosets() -> Vec<Vec<usize>> {
-    (0..169_usize)
-        .map(|i| (0..169_usize).map(|j| 169 * i + j).collect())
-        .collect()
+/// Matchup index for the button player's infoset `i`, member `j`.
+///
+/// The button's matchups are laid out row-major, so an infoset's members form a
+/// contiguous block. Computing the index is cheaper than the 114 KB lookup
+/// table it replaces.
+#[inline]
+fn bu_index(i: usize, j: usize) -> usize {
+    N_INFOSETS * i + j
 }
 
-fn bb_infosets() -> Vec<Vec<usize>> {
-    (0..169_usize)
-        .map(|i| (0..169_usize).map(|j| 169 * j + i).collect())
-        .collect()
+/// Matchup index for the big blind player's infoset `i`, member `j`.
+///
+/// The big blind's grouping is the transpose of the button's, so members are
+/// strided by `N_INFOSETS`.
+#[inline]
+fn bb_index(i: usize, j: usize) -> usize {
+    N_INFOSETS * j + i
 }
 
-fn expand_strategy(strategy: &[f32], infosets: Vec<Vec<usize>>) -> Vec<f32> {
-    let n_states: usize = infosets.iter().map(|x| x.len()).sum();
-    let mut result = vec![0_f32; n_states];
-    infosets.into_iter().enumerate().for_each(|(i, x)| {
-        x.into_iter().for_each(|index| result[index] = strategy[i]);
+/// Scatters each infoset's `strategy` value across the `members` matchups that
+/// belong to it, addressed by `index(infoset, member)`.
+fn expand_strategy<const N: usize>(
+    out: &mut [f32],
+    strategy: &[f32; N],
+    members: usize,
+    index: impl Fn(usize, usize) -> usize,
+) {
+    strategy.iter().enumerate().for_each(|(i, &s)| {
+        (0..members).for_each(|j| out[index(i, j)] = s);
     });
-    result
 }
 
-fn infoset_probability(probability: &[f32], infosets: Vec<Vec<usize>>) -> Vec<f32> {
-    let mut result = vec![0_f32; infosets.len()];
-    infosets.into_iter().enumerate().for_each(|(i, x)| {
-        result[i] = x.into_iter().map(|j| probability[j]).sum();
-    });
-    result
+fn infoset_probability<const N: usize>(
+    probability: &[f32],
+    members: usize,
+    index: impl Fn(usize, usize) -> usize,
+) -> [f32; N] {
+    std::array::from_fn(|i| (0..members).map(|j| probability[index(i, j)]).sum())
 }
 
-fn infoset_ev(probability: &[f32], ev: &[f32], infosets: Vec<Vec<usize>>) -> Vec<f32> {
-    let mut result = vec![0_f32; infosets.len()];
-    infosets.into_iter().enumerate().for_each(|(i, x)| {
-        let total_prob: f32 = x.iter().map(|j| probability[*j]).sum();
-        result[i] = x.into_iter().map(|j| ev[j] * probability[j]).sum::<f32>() / total_prob;
-    });
-    result
+fn infoset_ev<const N: usize>(
+    probability: &[f32],
+    ev: &[f32],
+    members: usize,
+    index: impl Fn(usize, usize) -> usize,
+) -> [f32; N] {
+    std::array::from_fn(|i| {
+        let total_prob: f32 = (0..members).map(|j| probability[index(i, j)]).sum();
+        (0..members)
+            .map(|j| {
+                let idx = index(i, j);
+                ev[idx] * probability[idx]
+            })
+            .sum::<f32>()
+            / total_prob
+    })
 }
 
-fn regret_match(regrets: &[f32]) -> Vec<f32> {
+fn regret_match<const N: usize>(regrets: &[f32; N]) -> [f32; N] {
     const EPSILON: f32 = 1e-6;
-    let n: f32 = regrets.len() as f32;
     let any_nonzero = regrets.iter().any(|x| *x > 0.);
 
-    match any_nonzero {
-        true => {
-            let mut result: Vec<f32> = regrets.iter().map(|x| EPSILON.max(*x)).collect();
-            let total: f32 = result.iter().sum();
-            scalar_div(&mut result, total);
+    if any_nonzero {
+        let mut result: [f32; N] = std::array::from_fn(|i| EPSILON.max(regrets[i]));
+        let total: f32 = result.iter().sum();
+        scalar_div(&mut result, total);
 
-            result
-        }
-        false => vec![1. / n; regrets.len()],
+        result
+    } else {
+        [1. / N as f32; N]
     }
 }
 
-fn update_strategy(avg_strat: &mut [f32], total_prob: &mut [f32], strat: &[f32], prob: &[f32]) {
-    let mut new_total_prob: Vec<f32> = total_prob.to_vec();
+fn update_strategy<const N: usize>(
+    avg_strat: &mut [f32; N],
+    total_prob: &mut [f32; N],
+    strat: &[f32; N],
+    prob: &[f32; N],
+) {
+    let mut new_total_prob = *total_prob;
     elem_add(&mut new_total_prob, prob);
 
-    let mut decay = total_prob.to_vec();
+    let mut decay = *total_prob;
     elem_div(&mut decay, &new_total_prob);
     elem_mul(avg_strat, &decay);
 
-    let mut contribution = prob.to_vec();
+    let mut contribution = *prob;
     elem_div(&mut contribution, &new_total_prob);
     elem_mul(&mut contribution, strat);
     elem_add(avg_strat, &contribution);
@@ -73,116 +97,114 @@ fn update_strategy(avg_strat: &mut [f32], total_prob: &mut [f32], strat: &[f32],
 }
 
 #[wasm_bindgen]
-pub fn load_equities() -> Vec<f32> {
-    let bytes: &[u8; 169 * 169 * 4] = include_bytes!("equities.bin");
-    bytes
-        .chunks_exact(4)
-        .map(|x| f32::from_le_bytes(x.try_into().unwrap()))
-        .collect()
-}
-
-#[wasm_bindgen]
-pub fn load_matchups() -> Vec<f32> {
-    let bytes: &[u8; 169 * 169] = include_bytes!("matchups.bin");
-    bytes.map(|x| x as f32).to_vec()
-}
-
-#[wasm_bindgen]
 pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
-    let equities = load_equities();
-    let matchups = load_matchups();
-    let infoset_p_root = infoset_probability(&matchups, bu_infosets());
+    // The matchup table is stored as `u8` counts to keep the wasm blob small;
+    // widen it to `f32` once into a heap buffer that the solver reads from.
+    let matchups: Box<[f32; N_MATCHUPS]> = {
+        let mut m = Box::new([0_f32; N_MATCHUPS]);
+        m.iter_mut()
+            .zip(MATCHUPS.iter())
+            .for_each(|(dst, &src)| *dst = src as f32);
+        m
+    };
 
-    let mut regrets_bu = vec![vec![0_f32; 169]; 2];
-    let mut regrets_bb = vec![vec![0_f32; 169]; 2];
+    let infoset_p_root: [f32; N_INFOSETS] =
+        infoset_probability(matchups.as_slice(), N_INFOSETS, bu_index);
 
-    let mut strat_bu = vec![0.5_f32; 169];
-    let mut strat_bb = vec![0.5_f32; 169];
+    let mut regrets_bu = [[0_f32; N_INFOSETS]; 2];
+    let mut regrets_bb = [[0_f32; N_INFOSETS]; 2];
 
-    let mut avg_strat_bu = vec![0.5_f32; 169];
-    let mut avg_strat_bb = vec![0.5_f32; 169];
+    let mut strat_bu = [0.5_f32; N_INFOSETS];
+    let mut strat_bb = [0.5_f32; N_INFOSETS];
 
-    let mut total_prob_bu = infoset_probability(&matchups, bu_infosets());
-    let mut total_prob_bb;
+    let mut avg_strat_bu = [0.5_f32; N_INFOSETS];
+    let mut avg_strat_bb = [0.5_f32; N_INFOSETS];
+
+    let mut total_prob_bu: [f32; N_INFOSETS] =
+        infoset_probability(matchups.as_slice(), N_INFOSETS, bu_index);
+    let mut total_prob_bb: [f32; N_INFOSETS];
     {
         let mut prob_b = matchups.clone();
-        scalar_mul(&mut prob_b, 0.5);
-        total_prob_bb = infoset_probability(&prob_b, bb_infosets());
+        scalar_mul(prob_b.as_mut_slice(), 0.5);
+        total_prob_bb = infoset_probability(prob_b.as_slice(), N_INFOSETS, bb_index);
     }
 
     // Compute terminal node payouts
-    let payouts_f = vec![-sb - ante; 169 * 169];
-    let payouts_bf = vec![1.0 + ante; 169 * 169];
+    let payouts_f: Box<[f32; N_MATCHUPS]> = Box::new([-sb - ante; N_MATCHUPS]);
+    let payouts_bf: Box<[f32; N_MATCHUPS]> = Box::new([1.0 + ante; N_MATCHUPS]);
     let payouts_bc;
     {
-        let mut payouts = equities.clone();
-        scalar_sub(&mut payouts, 0.5);
-        scalar_mul(&mut payouts, 2.0 * (stack + ante));
+        let mut payouts = Box::new(EQUITIES);
+        scalar_sub(payouts.as_mut_slice(), 0.5);
+        scalar_mul(payouts.as_mut_slice(), 2.0 * (stack + ante));
         payouts_bc = payouts;
     }
+
+    // Reusable scratch buffers, allocated once and overwritten each iteration.
+    let mut expanded_strat_bu = Box::new([0_f32; N_MATCHUPS]);
+    let mut expanded_strat_bb = Box::new([0_f32; N_MATCHUPS]);
+    let mut p_b = Box::new([0_f32; N_MATCHUPS]);
+    let mut p_f = Box::new([0_f32; N_MATCHUPS]);
+    let mut p_bc = Box::new([0_f32; N_MATCHUPS]);
+    let mut p_bf = Box::new([0_f32; N_MATCHUPS]);
+    let mut ev_b = Box::new([0_f32; N_MATCHUPS]);
+    let mut ev_root = Box::new([0_f32; N_MATCHUPS]);
+    let mut scratch = Box::new([0_f32; N_MATCHUPS]);
 
     for current_iter in 1..=iter {
         let decay_coefficient: f32 = (current_iter as f32) / (current_iter as f32 + 1.0);
         // Compute probabilities and EV of each node
-        let p_b: Vec<f32>;
-        let p_f: Vec<f32>;
-        {
-            let expanded_strat_bu = expand_strategy(&strat_bu, bu_infosets());
-            let mut temp = matchups.clone();
-            elem_mul(&mut temp, &expanded_strat_bu);
-            p_b = temp;
+        expand_strategy(
+            expanded_strat_bu.as_mut_slice(),
+            &strat_bu,
+            N_INFOSETS,
+            bu_index,
+        );
+        expand_strategy(
+            expanded_strat_bb.as_mut_slice(),
+            &strat_bb,
+            N_INFOSETS,
+            bb_index,
+        );
 
-            let mut temp = matchups.clone();
-            elem_sub(&mut temp, &p_b);
-            p_f = temp;
-        }
+        // p_b = matchups * strat_bu, p_f = matchups - p_b
+        p_b.copy_from_slice(matchups.as_slice());
+        elem_mul(p_b.as_mut_slice(), expanded_strat_bu.as_slice());
+        p_f.copy_from_slice(matchups.as_slice());
+        elem_sub(p_f.as_mut_slice(), p_b.as_slice());
 
-        let p_bc: Vec<f32>;
-        let p_bf: Vec<f32>;
-        {
-            let expanded_strat_bb = expand_strategy(&strat_bb, bb_infosets());
-            let mut temp = p_b.clone();
-            elem_mul(&mut temp, &expanded_strat_bb);
-            p_bc = temp;
+        // p_bc = p_b * strat_bb, p_bf = p_b - p_bc
+        p_bc.copy_from_slice(p_b.as_slice());
+        elem_mul(p_bc.as_mut_slice(), expanded_strat_bb.as_slice());
+        p_bf.copy_from_slice(p_b.as_slice());
+        elem_sub(p_bf.as_mut_slice(), p_bc.as_slice());
 
-            let mut temp = p_b.clone();
-            elem_sub(&mut temp, &p_bc);
-            p_bf = temp;
-        }
+        // ev_b = (payouts_bc * p_bc + payouts_bf * p_bf) / p_b
+        ev_b.copy_from_slice(payouts_bc.as_slice());
+        elem_mul(ev_b.as_mut_slice(), p_bc.as_slice());
+        scratch.copy_from_slice(payouts_bf.as_slice());
+        elem_mul(scratch.as_mut_slice(), p_bf.as_slice());
+        elem_add(ev_b.as_mut_slice(), scratch.as_slice());
+        elem_div(ev_b.as_mut_slice(), p_b.as_slice());
 
-        let ev_b: Vec<f32>;
-        {
-            let mut temp = payouts_bc.clone();
-            elem_mul(&mut temp, &p_bc);
-
-            let mut temp2 = payouts_bf.clone();
-            elem_mul(&mut temp2, &p_bf);
-
-            elem_add(&mut temp, &temp2);
-            elem_div(&mut temp, &p_b);
-            ev_b = temp;
-        }
-
-        let ev_root: Vec<f32>;
-        {
-            let mut temp = ev_b.clone();
-            elem_mul(&mut temp, &p_b);
-
-            let mut temp2 = payouts_f.clone();
-            elem_mul(&mut temp2, &p_f);
-
-            elem_add(&mut temp, &temp2);
-            elem_div(&mut temp, &matchups);
-            ev_root = temp;
-        }
+        // ev_root = (ev_b * p_b + payouts_f * p_f) / matchups
+        ev_root.copy_from_slice(ev_b.as_slice());
+        elem_mul(ev_root.as_mut_slice(), p_b.as_slice());
+        scratch.copy_from_slice(payouts_f.as_slice());
+        elem_mul(scratch.as_mut_slice(), p_f.as_slice());
+        elem_add(ev_root.as_mut_slice(), scratch.as_slice());
+        elem_div(ev_root.as_mut_slice(), matchups.as_slice());
 
         // Compute regrets for each infoset
         // Compute new strategy via regret matching
         // Update average strategy
         {
-            let infoset_ev_bf = infoset_ev(&p_bf, &payouts_bf, bb_infosets());
-            let infoset_ev_bc = infoset_ev(&p_bc, &payouts_bc, bb_infosets());
-            let infoset_ev_b = infoset_ev(&p_b, &ev_b, bb_infosets());
+            let infoset_ev_bf: [f32; N_INFOSETS] =
+                infoset_ev(p_bf.as_slice(), payouts_bf.as_slice(), N_INFOSETS, bb_index);
+            let infoset_ev_bc: [f32; N_INFOSETS] =
+                infoset_ev(p_bc.as_slice(), payouts_bc.as_slice(), N_INFOSETS, bb_index);
+            let infoset_ev_b: [f32; N_INFOSETS] =
+                infoset_ev(p_b.as_slice(), ev_b.as_slice(), N_INFOSETS, bb_index);
 
             let mut regrets_bb_bc = infoset_ev_b.clone();
             elem_sub(&mut regrets_bb_bc, &infoset_ev_bc);
@@ -203,10 +225,10 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
                 };
             });
 
-            strat_bb = (0..169_usize)
-                .map(|i| regret_match(&[regrets_bb[0][i], regrets_bb[1][i]])[0])
-                .collect();
-            let infoset_p_b = infoset_probability(&p_b, bb_infosets());
+            strat_bb =
+                std::array::from_fn(|i| regret_match(&[regrets_bb[0][i], regrets_bb[1][i]])[0]);
+            let infoset_p_b: [f32; N_INFOSETS] =
+                infoset_probability(p_b.as_slice(), N_INFOSETS, bb_index);
 
             update_strategy(
                 &mut avg_strat_bb,
@@ -221,9 +243,12 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
         }
 
         {
-            let infoset_ev_b = infoset_ev(&p_b, &ev_b, bu_infosets());
-            let infoset_ev_f = infoset_ev(&p_f, &payouts_f, bu_infosets());
-            let infoset_ev_root = infoset_ev(&matchups, &ev_root, bu_infosets());
+            let infoset_ev_b: [f32; N_INFOSETS] =
+                infoset_ev(p_b.as_slice(), ev_b.as_slice(), N_INFOSETS, bu_index);
+            let infoset_ev_f: [f32; N_INFOSETS] =
+                infoset_ev(p_f.as_slice(), payouts_f.as_slice(), N_INFOSETS, bu_index);
+            let infoset_ev_root: [f32; N_INFOSETS] =
+                infoset_ev(matchups.as_slice(), ev_root.as_slice(), N_INFOSETS, bu_index);
 
             let mut regrets_bu_b = infoset_ev_b.clone();
             elem_sub(&mut regrets_bu_b, &infoset_ev_root);
@@ -244,9 +269,8 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
                 };
             });
 
-            strat_bu = (0..169_usize)
-                .map(|i| regret_match(&[regrets_bu[0][i], regrets_bu[1][i]])[0])
-                .collect();
+            strat_bu =
+                std::array::from_fn(|i| regret_match(&[regrets_bu[0][i], regrets_bu[1][i]])[0]);
 
             update_strategy(
                 &mut avg_strat_bu,
@@ -264,24 +288,6 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
     // Test output
     #[cfg(test)]
     {
-        static HANDS: &[&str; 169] = &[
-            "22", "32s", "42s", "52s", "62s", "72s", "82s", "92s", "T2s", "J2s", "Q2s", "K2s",
-            "A2s", "32o", "33", "43s", "53s", "63s", "73s", "83s", "93s", "T3s", "J3s", "Q3s",
-            "K3s", "A3s", "42o", "43o", "44", "54s", "64s", "74s", "84s", "94s", "T4s", "J4s",
-            "Q4s", "K4s", "A4s", "52o", "53o", "54o", "55", "65s", "75s", "85s", "95s", "T5s",
-            "J5s", "Q5s", "K5s", "A5s", "62o", "63o", "64o", "65o", "66", "76s", "86s", "96s",
-            "T6s", "J6s", "Q6s", "K6s", "A6s", "72o", "73o", "74o", "75o", "76o", "77", "87s",
-            "97s", "T7s", "J7s", "Q7s", "K7s", "A7s", "82o", "83o", "84o", "85o", "86o", "87o",
-            "88", "98s", "T8s", "J8s", "Q8s", "K8s", "A8s", "92o", "93o", "94o", "95o", "96o",
-            "97o", "98o", "99", "T9s", "J9s", "Q9s", "K9s", "A9s", "T2o", "T3o", "T4o", "T5o",
-            "T6o", "T7o", "T8o", "T9o", "TT", "JTs", "QTs", "KTs", "ATs", "J2o", "J3o", "J4o",
-            "J5o", "J6o", "J7o", "J8o", "J9o", "JTo", "JJ", "QJs", "KJs", "AJs", "Q2o", "Q3o",
-            "Q4o", "Q5o", "Q6o", "Q7o", "Q8o", "Q9o", "QTo", "QJo", "QQ", "KQs", "AQs", "K2o",
-            "K3o", "K4o", "K5o", "K6o", "K7o", "K8o", "K9o", "KTo", "KJo", "KQo", "KK", "AKs",
-            "A2o", "A3o", "A4o", "A5o", "A6o", "A7o", "A8o", "A9o", "ATo", "AJo", "AQo", "AKo",
-            "AA",
-        ];
-
         avg_strat_bu.iter().enumerate().for_each(|(i, x)| {
             if *x > 0.999 {
                 print!("{}", HANDS[i]);
@@ -313,10 +319,9 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
         println!();
     }
 
-    let mut result = Vec::new();
-    result.extend(avg_strat_bu);
-    result.extend(avg_strat_bb);
-    result
+    // wasm-bindgen requires an owned, dynamically-sized return value across the
+    // ABI, so the two strategy arrays are concatenated into a `Vec` here.
+    [avg_strat_bu, avg_strat_bb].concat()
 }
 
 #[cfg(test)]
@@ -325,8 +330,8 @@ mod tests {
 
     #[test]
     fn test_matchups() {
-        let matchups = load_matchups();
-        let total_matchups = matchups.iter().map(|x| *x).sum::<f32>();
+        let matchups = MATCHUPS;
+        let total_matchups = matchups.iter().map(|x| *x as f32).sum::<f32>();
         assert_eq!(total_matchups as u32, 52 * 51 * 50 * 49 / 4);
 
         assert_eq!(matchups.iter().map(|x| *x as u32).max().unwrap(), 144);
@@ -346,42 +351,47 @@ mod tests {
 
     #[test]
     fn test_expand_strategy() {
-        let strategies: Vec<f32> = vec![0., 1., 2.];
+        let strategies = [0_f32, 1., 2.];
 
-        let infosets: Vec<Vec<usize>> = vec![vec![0, 1], vec![2, 3], vec![4, 5]];
-        let expanded_strategy = expand_strategy(&strategies, infosets);
-        assert_eq!(expanded_strategy, vec![0., 0., 1., 1., 2., 2.]);
+        // Members [[0, 1], [2, 3], [4, 5]]
+        let mut expanded_strategy = [0_f32; 6];
+        expand_strategy(&mut expanded_strategy, &strategies, 2, |i, j| 2 * i + j);
+        assert_eq!(expanded_strategy, [0., 0., 1., 1., 2., 2.]);
 
-        let infosets: Vec<Vec<usize>> = vec![vec![0, 5], vec![1, 4], vec![2, 3]];
-        let expanded_strategy = expand_strategy(&strategies, infosets);
-        assert_eq!(expanded_strategy, vec![0., 1., 2., 2., 1., 0.]);
+        // Members [[0, 5], [1, 4], [2, 3]]
+        let mut expanded_strategy = [0_f32; 6];
+        expand_strategy(&mut expanded_strategy, &strategies, 2, |i, j| {
+            if j == 0 { i } else { 5 - i }
+        });
+        assert_eq!(expanded_strategy, [0., 1., 2., 2., 1., 0.]);
     }
 
     #[test]
     fn test_infosets() {
-        let infosets_bu = bu_infosets();
-        let infosets_bb = bb_infosets();
-
-        for i in 0..169_usize {
-            for j in 0..169_usize {
-                assert_eq!(i * 169 + j, infosets_bu[i][j]);
-                assert_eq!(i * 169 + j, infosets_bb[j][i]);
+        for i in 0..N_INFOSETS {
+            for j in 0..N_INFOSETS {
+                assert_eq!(N_INFOSETS * i + j, bu_index(i, j));
+                assert_eq!(N_INFOSETS * i + j, bb_index(j, i));
             }
         }
     }
 
+    /// Widen the `u8` matchup counts to `f32` the same way `solve_push_fold` does.
+    fn matchups_f32() -> [f32; N_MATCHUPS] {
+        std::array::from_fn(|i| MATCHUPS[i] as f32)
+    }
+
     #[test]
     fn test_infoset_probability() {
-        let probs: Vec<f32> = vec![1., 2., 3., 4.];
-        let infosets: Vec<Vec<usize>> = vec![vec![0, 1], vec![2, 3]];
-        let infoset_probs = infoset_probability(&probs, infosets);
-        assert_eq!(infoset_probs, vec![3., 7.]);
+        let probs = [1_f32, 2., 3., 4.];
+        let infoset_probs: [f32; 2] = infoset_probability(&probs, 2, |i, j| 2 * i + j);
+        assert_eq!(infoset_probs, [3., 7.]);
 
-        let matchups = load_matchups();
-        let infosets_bu = bu_infosets();
-        let infoset_probs_bu = infoset_probability(&matchups, infosets_bu);
-        let infosets_bb = bb_infosets();
-        let infoset_probs_bb = infoset_probability(&matchups, infosets_bb);
+        let matchups = matchups_f32();
+        let infoset_probs_bu: [f32; N_INFOSETS] =
+            infoset_probability(&matchups, N_INFOSETS, bu_index);
+        let infoset_probs_bb: [f32; N_INFOSETS] =
+            infoset_probability(&matchups, N_INFOSETS, bb_index);
 
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bu[0] as u32, 221); // Pocket pair, 1326/6
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bu[1] as u32, 1326 / 4); // Suited combo, 1326/4
@@ -390,7 +400,7 @@ mod tests {
             1326 / 12
         ); // Offsuit combo, 1326/12
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bu[14] as u32, 221); // 1326 / 6
-                                                                              //
+        //
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bb[0] as u32, 221); // Pocket pair, 1326/6
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bb[1] as u32, 1326 / 4); // Suited combo, 1326/4
         assert_eq!(
@@ -402,21 +412,17 @@ mod tests {
 
     #[test]
     fn test_infoset_ev() {
-        let probs: Vec<f32> = vec![1., 3., 3., 4.];
-        let evs: Vec<f32> = vec![1., 2., 0., 7.];
-        let infosets: Vec<Vec<usize>> = vec![vec![0, 1], vec![2, 3]];
-        let infoset_evs = infoset_ev(&probs, &evs, infosets);
-        assert_eq!(infoset_evs, vec![1.75, 4.]);
+        let probs = [1_f32, 3., 3., 4.];
+        let evs = [1_f32, 2., 0., 7.];
+        let infoset_evs: [f32; 2] = infoset_ev(&probs, &evs, 2, |i, j| 2 * i + j);
+        assert_eq!(infoset_evs, [1.75, 4.]);
     }
 
     #[test]
     fn test_regret_match() {
-        assert_eq!(regret_match(&[0., 0.]), vec![0.5, 0.5]);
-        assert_eq!(regret_match(&[0., -1.]), vec![0.5, 0.5]);
-        assert_eq!(
-            regret_match(&[1., 2., 4., 1.]),
-            vec![0.125, 0.25, 0.5, 0.125]
-        );
+        assert_eq!(regret_match(&[0., 0.]), [0.5, 0.5]);
+        assert_eq!(regret_match(&[0., -1.]), [0.5, 0.5]);
+        assert_eq!(regret_match(&[1., 2., 4., 1.]), [0.125, 0.25, 0.5, 0.125]);
     }
 
     #[test]

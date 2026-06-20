@@ -28,7 +28,7 @@
 	</div>
 	<main class="about-right-container">
 		<h1>About</h1>
-		<p>I'm joining Google as a Research Data Scientist.</p>
+		<p>I'm joining Google as a Research Data Scientist, working on AI metrics.</p>
 		<p>
 			Previously, I worked at Apple as a Machine Learning Algorithms Engineer. I developed methods
 			for sensor fusion, motion, touch, and force sensing, as well as haptics and audio rendering on
