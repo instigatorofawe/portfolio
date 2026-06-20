@@ -206,11 +206,11 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
             let infoset_ev_b: [f32; N_INFOSETS] =
                 infoset_ev(p_b.as_slice(), ev_b.as_slice(), N_INFOSETS, bb_index);
 
-            let mut regrets_bb_bc = infoset_ev_b.clone();
+            let mut regrets_bb_bc = infoset_ev_b;
             elem_sub(&mut regrets_bb_bc, &infoset_ev_bc);
             elem_add(&mut regrets_bb[0], &regrets_bb_bc);
 
-            let mut regrets_bb_bf = infoset_ev_b.clone();
+            let mut regrets_bb_bf = infoset_ev_b;
             elem_sub(&mut regrets_bb_bf, &infoset_ev_bf);
             elem_add(&mut regrets_bb[1], &regrets_bb_bf);
 
@@ -247,14 +247,18 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
                 infoset_ev(p_b.as_slice(), ev_b.as_slice(), N_INFOSETS, bu_index);
             let infoset_ev_f: [f32; N_INFOSETS] =
                 infoset_ev(p_f.as_slice(), payouts_f.as_slice(), N_INFOSETS, bu_index);
-            let infoset_ev_root: [f32; N_INFOSETS] =
-                infoset_ev(matchups.as_slice(), ev_root.as_slice(), N_INFOSETS, bu_index);
+            let infoset_ev_root: [f32; N_INFOSETS] = infoset_ev(
+                matchups.as_slice(),
+                ev_root.as_slice(),
+                N_INFOSETS,
+                bu_index,
+            );
 
-            let mut regrets_bu_b = infoset_ev_b.clone();
+            let mut regrets_bu_b = infoset_ev_b;
             elem_sub(&mut regrets_bu_b, &infoset_ev_root);
             elem_add(&mut regrets_bu[0], &regrets_bu_b);
 
-            let mut regrets_bu_f = infoset_ev_f.clone();
+            let mut regrets_bu_f = infoset_ev_f;
             elem_sub(&mut regrets_bu_f, &infoset_ev_root);
             elem_add(&mut regrets_bu[1], &regrets_bu_f);
 

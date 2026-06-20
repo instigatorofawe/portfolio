@@ -4,7 +4,7 @@ pub const N_INFOSETS: usize = 169;
 pub const N_MATCHUPS: usize = N_INFOSETS * N_INFOSETS;
 
 /// Equity lookup table for each matchup
-pub const EQUITIES: [f32; N_MATCHUPS] = {
+pub static EQUITIES: [f32; N_MATCHUPS] = {
     let bytes = include_bytes!("equities.bin");
     let mut result = [0.0f32; N_MATCHUPS];
     let mut i = 0;
@@ -19,10 +19,10 @@ pub const EQUITIES: [f32; N_MATCHUPS] = {
 /// Raw matchup frequency counts, one byte each. Widened to `f32` at runtime
 /// (see `solve_push_fold`) rather than baked into the wasm blob as `f32`, which
 /// would quadruple this table's footprint.
-pub const MATCHUPS: [u8; N_MATCHUPS] = *include_bytes!("matchups.bin");
+pub static MATCHUPS: [u8; N_MATCHUPS] = *include_bytes!("matchups.bin");
 
 #[cfg(test)]
-pub const HANDS: [&'static str; N_INFOSETS] = [
+pub const HANDS: [&str; N_INFOSETS] = [
     "22", "32s", "42s", "52s", "62s", "72s", "82s", "92s", "T2s", "J2s", "Q2s", "K2s", "A2s",
     "32o", "33", "43s", "53s", "63s", "73s", "83s", "93s", "T3s", "J3s", "Q3s", "K3s", "A3s",
     "42o", "43o", "44", "54s", "64s", "74s", "84s", "94s", "T4s", "J4s", "Q4s", "K4s", "A4s",

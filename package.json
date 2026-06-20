@@ -1,0 +1,17 @@
+{
+	"name": "portfolio",
+	"private": true,
+	"scripts": {
+		"dev": "pnpm -C liuran dev",
+		"build": "pnpm -C liuran build",
+		"preview": "pnpm -C liuran preview",
+		"check": "pnpm -C liuran check",
+		"lint": "pnpm -C liuran lint",
+		"format": "pnpm -C liuran format",
+		"test": "pnpm -C liuran test",
+		"test:unit": "pnpm -C liuran test:unit",
+		"test:e2e": "pnpm -C liuran test:e2e",
+		"install:liuran": "pnpm -C liuran install",
+		"build:pushfold": "./scripts/build-pushfold.sh"
+	}
+}

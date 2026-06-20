@@ -1,0 +1,19 @@
+---
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 120
+# Regroup includes into three blocks separated by a blank line, in this order:
+#   1. system / third-party angle includes  (<array>, <omp/...>, <gtest/...>)
+#   2. our library angle includes           (<pushfold/...>)
+#   3. double-quoted includes               ("pushfold/...")
+# Regexes are tried top-to-bottom; the first match assigns the priority, so the
+# <pushfold/...> rule must precede the catch-all <...> rule.
+IncludeBlocks: Regroup
+SortIncludes: true
+IncludeCategories:
+  - Regex: '^<pushfold/'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 1
+  - Regex: '^"'
+    Priority: 3

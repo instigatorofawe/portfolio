@@ -1,0 +1,42 @@
+repos:
+  - repo: local
+    hooks:
+      # --- Web (liuran) ---
+      - id: pnpm-format
+        name: pnpm format
+        entry: pnpm format
+        language: system
+        pass_filenames: false
+        files: ^liuran/
+        types_or: [javascript, jsx, ts, tsx, svelte, css, scss, html, json, markdown, yaml]
+
+      - id: pnpm-lint
+        name: pnpm lint
+        entry: pnpm lint
+        language: system
+        pass_filenames: false
+        files: ^liuran/
+        types_or: [javascript, jsx, ts, tsx, svelte, css, scss, html, json, markdown, yaml]
+
+      # --- C / C++ / CUDA (lookups) ---
+      # Use Xcode's clang-format via xcrun on macOS, otherwise fall back to clang-format on PATH.
+      - id: clang-format
+        name: clang-format
+        entry: bash -c 'if command -v xcrun >/dev/null 2>&1; then exec xcrun clang-format -i "$@"; else exec clang-format -i "$@"; fi' --
+        language: system
+        types_or: [c++, c, cuda]
+
+      # --- Rust (pushfold) ---
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --manifest-path pushfold/Cargo.toml --
+        language: system
+        pass_filenames: false
+        files: ^pushfold/.*\.rs$
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --manifest-path pushfold/Cargo.toml --all-targets -- -D warnings
+        language: system
+        pass_filenames: false
+        files: ^pushfold/.*\.rs$
