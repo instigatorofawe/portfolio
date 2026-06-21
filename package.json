@@ -3,7 +3,12 @@
 	"private": true,
 	"scripts": {
 		"dev": "pnpm -C liuran dev",
-		"build": "pnpm -C liuran build",
+		"build": "nx build liuran",
+		"build:web": "pnpm -C liuran build",
+		"build:wasm": "nx build-wasm pushfold",
+		"lookups": "nx generate-lookups lookups",
+		"clean": "nx reset && rm -rf lookups/build pushfold/target liuran/.svelte-kit liuran/build",
+		"rebuild": "pnpm clean && pnpm build",
 		"preview": "pnpm -C liuran preview",
 		"check": "pnpm -C liuran check",
 		"lint": "pnpm -C liuran lint",
@@ -13,5 +18,8 @@
 		"test:e2e": "pnpm -C liuran test:e2e",
 		"install:liuran": "pnpm -C liuran install",
 		"build:pushfold": "./scripts/build-pushfold.sh"
+	},
+	"devDependencies": {
+		"nx": "^23.0.0"
 	}
 }

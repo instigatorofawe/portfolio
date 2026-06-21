@@ -1,0 +1,24 @@
+{
+	"$schema": "../node_modules/nx/schemas/project-schema.json",
+	"name": "pushfold",
+	"projectType": "library",
+	"targets": {
+		"build-wasm": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"dependsOn": [
+				{ "projects": ["lookups"], "target": "generate-lookups" }
+			],
+			"inputs": [
+				"{projectRoot}/Cargo.toml",
+				"{projectRoot}/Cargo.lock",
+				"{projectRoot}/src/**/*",
+				"{workspaceRoot}/scripts/build-pushfold.sh"
+			],
+			"outputs": ["{workspaceRoot}/liuran/src/lib/pkg"],
+			"options": {
+				"command": "./scripts/build-pushfold.sh"
+			}
+		}
+	}
+}

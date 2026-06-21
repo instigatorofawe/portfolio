@@ -1,0 +1,17 @@
+{
+	"$schema": "../node_modules/nx/schemas/project-schema.json",
+	"name": "liuran",
+	"projectType": "application",
+	"targets": {
+		"build": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"dependsOn": [{ "projects": ["pushfold"], "target": "build-wasm" }],
+			"inputs": ["{projectRoot}/**/*"],
+			"outputs": ["{projectRoot}/build", "{projectRoot}/.svelte-kit"],
+			"options": {
+				"command": "pnpm -C liuran build"
+			}
+		}
+	}
+}

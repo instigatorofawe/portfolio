@@ -1,0 +1,25 @@
+{
+	"$schema": "../node_modules/nx/schemas/project-schema.json",
+	"name": "lookups",
+	"projectType": "library",
+	"targets": {
+		"generate-lookups": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/CMakeLists.txt",
+				"{projectRoot}/src/**/*",
+				"{projectRoot}/include/**/*"
+			],
+			"outputs": ["{workspaceRoot}/pushfold/src/generated"],
+			"options": {
+				"parallel": false,
+				"commands": [
+					"cmake -S lookups -B lookups/build",
+					"cmake --build lookups/build --target generate_pushfold_lookups",
+					"lookups/build/generate_pushfold_lookups pushfold/src/generated rust"
+				]
+			}
+		}
+	}
+}

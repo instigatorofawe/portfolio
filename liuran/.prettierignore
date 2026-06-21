@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Generated wasm-bindgen glue (emitted by the pushfold build-wasm step)
+/src/lib/pkg/

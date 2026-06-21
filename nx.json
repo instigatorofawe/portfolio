@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "sharedGlobals": []
+  },
+  "targetDefaults": {
+    "generate-lookups": {
+      "cache": true
+    },
+    "build-wasm": {
+      "cache": true
+    },
+    "build": {
+      "cache": true
+    }
+  },
+  "analytics": false
+}
