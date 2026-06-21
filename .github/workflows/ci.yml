@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs for the same branch/PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # lookups/src/generate.cpp uses C++23 <print>, which needs GCC 14's
+      # libstdc++. Point CMake at it via the standard CC/CXX env vars.
+      CC: gcc-14
+      CXX: g++-14
+    steps:
+      - uses: actions/checkout@v4
+
+      # The lookups CMake build fetches OMPEval over SSH (git@github.com:...).
+      # Runners have no SSH key, so rewrite those clones to HTTPS.
+      - name: Use HTTPS for github.com clones
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Install GCC 14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            liuran/pnpm-lock.yaml
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pushfold
+
+      # Prebuilt binary; the version must match the wasm-bindgen crate in
+      # pushfold/Cargo.toml or the build fails with a version-mismatch error.
+      - name: Install wasm-bindgen-cli
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen-cli@0.2.125
+
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            nx-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm install:liuran --frozen-lockfile
+
+      # Runs the full Nx pipeline: lookups -> wasm -> app. This also produces
+      # liuran/src/lib/pkg, which the check/lint/test steps below import.
+      - name: Build
+        run: pnpm build
+
+      - name: Type-check
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Install Playwright (chromium)
+        run: pnpm -C liuran exec playwright install --with-deps chromium
+
+      - name: Unit tests
+        run: pnpm -C liuran test:unit --run --passWithNoTests

@@ -9,6 +9,7 @@
 		"lookups": "nx generate-lookups lookups",
 		"clean": "nx reset && rm -rf lookups/build pushfold/target liuran/.svelte-kit liuran/build",
 		"rebuild": "pnpm clean && pnpm build",
+		"ci:local": "pnpm build && pnpm check && pnpm lint && pnpm -C liuran test:unit --run --passWithNoTests",
 		"preview": "pnpm -C liuran preview",
 		"check": "pnpm -C liuran check",
 		"lint": "pnpm -C liuran lint",
