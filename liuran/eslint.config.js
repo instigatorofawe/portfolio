@@ -12,6 +12,8 @@ export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 	// Generated wasm-bindgen glue — not worth linting.
 	{ ignores: ['src/lib/pkg/**'] },
+	// Generated lookup tables (emitted by the lookups generate-hands step).
+	{ ignores: ['src/lib/generated/**'] },
 	js.configs.recommended,
 	ts.configs.recommended,
 	svelte.configs.recommended,

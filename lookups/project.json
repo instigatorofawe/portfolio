@@ -11,7 +11,11 @@
 				"{projectRoot}/src/**/*",
 				"{projectRoot}/include/**/*"
 			],
-			"outputs": ["{workspaceRoot}/pushfold/src/generated"],
+			"outputs": [
+				"{workspaceRoot}/pushfold/src/generated/equity.rs",
+				"{workspaceRoot}/pushfold/src/generated/matchup.rs",
+				"{workspaceRoot}/pushfold/src/generated/hands.rs"
+			],
 			"options": {
 				"parallel": false,
 				"commands": [
@@ -19,6 +23,20 @@
 					"cmake --build lookups/build --target generate_pushfold_lookups",
 					"lookups/build/generate_pushfold_lookups pushfold/src/generated rust"
 				]
+			}
+		},
+		"generate-hands": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"dependsOn": ["generate-lookups"],
+			"inputs": [
+				"{projectRoot}/CMakeLists.txt",
+				"{projectRoot}/src/**/*",
+				"{projectRoot}/include/**/*"
+			],
+			"outputs": ["{workspaceRoot}/liuran/src/lib/generated/hands.ts"],
+			"options": {
+				"command": "lookups/build/generate_pushfold_lookups liuran/src/lib/generated ts --hands"
 			}
 		}
 	}

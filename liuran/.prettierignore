@@ -10,3 +10,6 @@ bun.lockb
 
 # Generated wasm-bindgen glue (emitted by the pushfold build-wasm step)
 /src/lib/pkg/
+
+# Generated lookup tables (emitted by the lookups generate-hands step)
+/src/lib/generated/

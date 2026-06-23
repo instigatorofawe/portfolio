@@ -6,7 +6,10 @@
 		"build": {
 			"executor": "nx:run-commands",
 			"cache": true,
-			"dependsOn": [{ "projects": ["pushfold"], "target": "build-wasm" }],
+			"dependsOn": [
+				{ "projects": ["pushfold"], "target": "build-wasm" },
+				{ "projects": ["lookups"], "target": "generate-hands" }
+			],
 			"inputs": ["{projectRoot}/**/*"],
 			"outputs": ["{projectRoot}/build", "{projectRoot}/.svelte-kit"],
 			"options": {

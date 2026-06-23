@@ -13,6 +13,7 @@
 #include <pushfold/Equity.hpp>
 #include <pushfold/Frontends/CppFrontend.hpp>
 #include <pushfold/Frontends/RustFrontend.hpp>
+#include <pushfold/Frontends/TypeScriptFrontend.hpp>
 #include <pushfold/Matchups.hpp>
 
 namespace {
@@ -35,6 +36,7 @@ struct Naming {
 
 constexpr Naming kCppNaming = {.extension = "hpp", .equity = "kEquities", .matchup = "kMatchups", .hands = "kHands"};
 constexpr Naming kRustNaming = {.extension = "rs", .equity = "EQUITIES", .matchup = "MATCHUPS", .hands = "HANDS"};
+constexpr Naming kTsNaming = {.extension = "ts", .equity = "EQUITIES", .matchup = "MATCHUPS", .hands = "HANDS"};
 
 // Opens one table file with @p Frontend and emits @p table under @p name. The
 // frontend closes the namespace/file when it destructs at the end of scope. A
@@ -52,40 +54,95 @@ void WriteTable(const std::filesystem::path& path, std::string_view name, const 
     std::println("  wrote {}", path.string());
 }
 
-// Computes the equity and matchup tables, then emits both as @p Frontend source
-// into @p dir using the given naming/extension.
+// Which tables to generate. Defaulted to none so the flag parser can set only
+// what was requested; main() turns "nothing selected" into "select all".
+struct Selection {
+    bool equity = false;
+    bool matchup = false;
+    bool hands = false;
+
+    bool Any() const { return equity || matchup || hands; }
+};
+
+// Computes and emits the @p selection of tables as @p Frontend source into
+// @p dir using the given naming/extension. Each table is only solved when it is
+// selected, so the flags can skip the expensive equity solve.
 template <typename Frontend>
-void Generate(const std::filesystem::path& dir, const Naming& naming) {
+void Generate(const std::filesystem::path& dir, const Naming& naming, const Selection& selection) {
     // The generators hold ~114KB equity / ~28KB matchup matrices; keep them off
     // the stack. Solving the equity table enumerates every infoset matchup, so
     // it dominates the runtime.
-    std::println("Solving equity table ({} matchups)...", kNumEquityMatchups);
-    const auto equity = std::make_unique<EquityGenerator>();
-    const std::array<EquityScalar, kNumEquityMatchups> equities = equity->Quantize<EquityScalar>();
+    if (selection.equity) {
+        std::println("Solving equity table ({} matchups)...", kNumEquityMatchups);
+        const auto equity = std::make_unique<EquityGenerator>();
+        const std::array<EquityScalar, kNumEquityMatchups> equities = equity->Quantize<EquityScalar>();
+        WriteTable<Frontend>(dir / std::format("equity.{}", naming.extension), naming.equity, equities);
+    }
 
-    std::println("Solving matchup table ({} entries)...", kNumMatchupEntries);
-    const auto matchup = std::make_unique<MatchupGenerator>();
-    const std::array<std::uint8_t, kNumMatchupEntries> matchups = matchup->Flatten();
-
-    WriteTable<Frontend>(dir / std::format("equity.{}", naming.extension), naming.equity, equities);
-    WriteTable<Frontend>(dir / std::format("matchup.{}", naming.extension), naming.matchup, matchups);
+    if (selection.matchup) {
+        std::println("Solving matchup table ({} entries)...", kNumMatchupEntries);
+        const auto matchup = std::make_unique<MatchupGenerator>();
+        const std::array<std::uint8_t, kNumMatchupEntries> matchups = matchup->Flatten();
+        WriteTable<Frontend>(dir / std::format("matchup.{}", naming.extension), naming.matchup, matchups);
+    }
 
     // The hands table maps each infoset index to its label. It is fixed
     // reference data (not solved), and only the consumers' tests need it, so the
     // Rust copy is gated behind #[cfg(test)] to keep it out of release builds.
-    WriteTable<Frontend>(dir / std::format("hands.{}", naming.extension), naming.hands, kHands, "#[cfg(test)]");
+    if (selection.hands) {
+        WriteTable<Frontend>(dir / std::format("hands.{}", naming.extension), naming.hands, kHands, "#[cfg(test)]");
+    }
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 3) {
-        std::println(stderr, "usage: {} <output-dir> <rust|cpp>", argv[0]);
+    const auto print_usage = [&] {
+        std::println(stderr, "usage: {} <output-dir> <rust|cpp|ts> [--equity] [--matchup] [--hands]", argv[0]);
+        std::println(stderr, "  table flags select which tables to generate (default: all)");
+    };
+
+    std::string_view dir_arg;
+    std::string_view frontend;
+    Selection selection;
+    int positional = 0;
+
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg = argv[i];
+        if (arg == "--equity") {
+            selection.equity = true;
+        } else if (arg == "--matchup") {
+            selection.matchup = true;
+        } else if (arg == "--hands") {
+            selection.hands = true;
+        } else if (arg.starts_with("--")) {
+            std::println(stderr, "error: unknown flag '{}'", arg);
+            print_usage();
+            return 2;
+        } else if (positional == 0) {
+            dir_arg = arg;
+            ++positional;
+        } else if (positional == 1) {
+            frontend = arg;
+            ++positional;
+        } else {
+            std::println(stderr, "error: unexpected argument '{}'", arg);
+            print_usage();
+            return 2;
+        }
+    }
+
+    if (positional != 2) {
+        print_usage();
         return 2;
     }
 
-    const std::filesystem::path dir = argv[1];
-    const std::string_view frontend = argv[2];
+    // No table flags means generate everything.
+    if (!selection.Any()) {
+        selection = {.equity = true, .matchup = true, .hands = true};
+    }
+
+    const std::filesystem::path dir = dir_arg;
 
     try {
         // Create the output directory (and parents) if it does not exist; a
@@ -93,11 +150,13 @@ int main(int argc, char** argv) {
         std::filesystem::create_directories(dir);
 
         if (frontend == "cpp") {
-            Generate<CppFrontend>(dir, kCppNaming);
+            Generate<CppFrontend>(dir, kCppNaming, selection);
         } else if (frontend == "rust") {
-            Generate<RustFrontend>(dir, kRustNaming);
+            Generate<RustFrontend>(dir, kRustNaming, selection);
+        } else if (frontend == "ts") {
+            Generate<TypeScriptFrontend>(dir, kTsNaming, selection);
         } else {
-            std::println(stderr, "error: unknown frontend '{}' (expected 'rust' or 'cpp')", frontend);
+            std::println(stderr, "error: unknown frontend '{}' (expected 'rust', 'cpp', or 'ts')", frontend);
             return 2;
         }
     } catch (const std::exception& e) {
