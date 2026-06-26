@@ -92,6 +92,26 @@ void Generate(const std::filesystem::path& dir, const Naming& naming, const Sele
     if (selection.hands) {
         WriteTable<Frontend>(dir / std::format("hands.{}", naming.extension), naming.hands, kHands, "#[cfg(test)]");
     }
+
+    // Rust groups the generated files under a directory module, which needs a
+    // mod.rs declaring each table file as a submodule. The other frontends pull
+    // the files in directly (C++ via #include, TypeScript via module path), so
+    // they need no equivalent. The module names are the file stems ("equity",
+    // "matchup", "hands"); the hands table is test-only, so its module is gated
+    // to match.
+    if constexpr (std::same_as<Frontend, RustFrontend>) {
+        RustFrontend mod((dir / "mod.rs").string());
+        if (selection.equity) {
+            mod.EmitModule("equity");
+        }
+        if (selection.hands) {
+            mod.EmitModule("hands", "#[cfg(test)]");
+        }
+        if (selection.matchup) {
+            mod.EmitModule("matchup");
+        }
+        std::println("  wrote {}", (dir / "mod.rs").string());
+    }
 }
 
 }  // namespace

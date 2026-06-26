@@ -14,7 +14,8 @@
 			"outputs": [
 				"{workspaceRoot}/pushfold/src/generated/equity.rs",
 				"{workspaceRoot}/pushfold/src/generated/matchup.rs",
-				"{workspaceRoot}/pushfold/src/generated/hands.rs"
+				"{workspaceRoot}/pushfold/src/generated/hands.rs",
+				"{workspaceRoot}/pushfold/src/generated/mod.rs"
 			],
 			"options": {
 				"parallel": false,

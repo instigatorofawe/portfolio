@@ -88,6 +88,22 @@ class RustFrontend {
         Write("\n];\n");
     }
 
+    /**
+     * @brief Emits a module declaration: `pub mod NAME;`.
+     *
+     * Generated tables live in their own files; a directory module needs a
+     * `mod.rs` declaring each file as a submodule, which is what this emits. A
+     * non-empty @p attribute is written on its own line directly above the
+     * declaration (e.g. "#[cfg(test)]" to keep a test-only module out of release
+     * builds). Unlike EmitArray, declarations are written contiguously with no
+     * separating blank line so they read as a single module list.
+     */
+    void EmitModule(std::string_view name, std::string_view attribute = {}) {
+        EmitAttribute(attribute);
+        Write("pub mod {};\n", name);
+        wrote_any_ = true;
+    }
+
    private:
     // libc++ does not provide the std::print(std::ostream&, ...) overload, so
     // format into the stream by hand. Keeps the format-string call sites tidy.

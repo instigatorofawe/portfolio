@@ -98,15 +98,10 @@ fn update_strategy<const N: usize>(
 
 #[wasm_bindgen]
 pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
-    // The matchup table is stored as `u8` counts to keep the wasm blob small;
-    // widen it to `f32` once into a heap buffer that the solver reads from.
-    let matchups: Box<[f32; N_MATCHUPS]> = {
-        let mut m = Box::new([0_f32; N_MATCHUPS]);
-        m.iter_mut()
-            .zip(MATCHUPS.iter())
-            .for_each(|(dst, &src)| *dst = src as f32);
-        m
-    };
+    // The matchup table ships as a symmetric upper triangle of `u8` counts to
+    // keep the wasm blob small; expand it once into the full `f32` matrix the
+    // solver reads from.
+    let matchups: Box<[f32; N_MATCHUPS]> = matchups();
 
     let infoset_p_root: [f32; N_INFOSETS] =
         infoset_probability(matchups.as_slice(), N_INFOSETS, bu_index);
@@ -134,7 +129,7 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
     let payouts_bf: Box<[f32; N_MATCHUPS]> = Box::new([1.0 + ante; N_MATCHUPS]);
     let payouts_bc;
     {
-        let mut payouts = Box::new(EQUITIES);
+        let mut payouts = equities();
         scalar_sub(payouts.as_mut_slice(), 0.5);
         scalar_mul(payouts.as_mut_slice(), 2.0 * (stack + ante));
         payouts_bc = payouts;
@@ -292,35 +287,26 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
     // Test output
     #[cfg(test)]
     {
-        avg_strat_bu.iter().enumerate().for_each(|(i, x)| {
-            if *x > 0.999 {
-                print!("{}", HANDS[i]);
-                if i < 168 {
-                    print!(",");
+        let hands = hands();
+        let print_strategy = |strat: &[f32; N_INFOSETS]| {
+            strat.iter().enumerate().for_each(|(i, x)| {
+                if *x > 0.999 {
+                    print!("{}", hands[i]);
+                    if i < N_INFOSETS - 1 {
+                        print!(",");
+                    }
+                } else if *x > 0.001 {
+                    print!("{}:{:.3}", hands[i], x);
+                    if i < N_INFOSETS - 1 {
+                        print!(",");
+                    }
                 }
-            } else if *x > 0.001 {
-                print!("{}:{:.3}", HANDS[i], x);
-                if i < 168 {
-                    print!(",");
-                }
-            }
-        });
+            });
+            println!();
+        };
+        print_strategy(&avg_strat_bu);
         println!();
-        println!();
-        avg_strat_bb.iter().enumerate().for_each(|(i, x)| {
-            if *x > 0.999 {
-                print!("{}", HANDS[i]);
-                if i < 168 {
-                    print!(",");
-                }
-            } else if *x > 0.001 {
-                print!("{}:{:.3}", HANDS[i], x);
-                if i < 168 {
-                    print!(",");
-                }
-            }
-        });
-        println!();
+        print_strategy(&avg_strat_bb);
     }
 
     // wasm-bindgen requires an owned, dynamically-sized return value across the
@@ -334,8 +320,8 @@ mod tests {
 
     #[test]
     fn test_matchups() {
-        let matchups = MATCHUPS;
-        let total_matchups = matchups.iter().map(|x| *x as f32).sum::<f32>();
+        let matchups = matchups();
+        let total_matchups = matchups.iter().sum::<f32>();
         assert_eq!(total_matchups as u32, 52 * 51 * 50 * 49 / 4);
 
         assert_eq!(matchups.iter().map(|x| *x as u32).max().unwrap(), 144);
@@ -343,8 +329,8 @@ mod tests {
 
         use std::collections::HashSet;
         let mut unique_values: Vec<u32> = matchups
-            .into_iter()
-            .map(|x| x as u32)
+            .iter()
+            .map(|x| *x as u32)
             .collect::<HashSet<u32>>()
             .into_iter()
             .collect();
@@ -380,22 +366,17 @@ mod tests {
         }
     }
 
-    /// Widen the `u8` matchup counts to `f32` the same way `solve_push_fold` does.
-    fn matchups_f32() -> [f32; N_MATCHUPS] {
-        std::array::from_fn(|i| MATCHUPS[i] as f32)
-    }
-
     #[test]
     fn test_infoset_probability() {
         let probs = [1_f32, 2., 3., 4.];
         let infoset_probs: [f32; 2] = infoset_probability(&probs, 2, |i, j| 2 * i + j);
         assert_eq!(infoset_probs, [3., 7.]);
 
-        let matchups = matchups_f32();
+        let matchups = matchups();
         let infoset_probs_bu: [f32; N_INFOSETS] =
-            infoset_probability(&matchups, N_INFOSETS, bu_index);
+            infoset_probability(matchups.as_slice(), N_INFOSETS, bu_index);
         let infoset_probs_bb: [f32; N_INFOSETS] =
-            infoset_probability(&matchups, N_INFOSETS, bb_index);
+            infoset_probability(matchups.as_slice(), N_INFOSETS, bb_index);
 
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bu[0] as u32, 221); // Pocket pair, 1326/6
         assert_eq!(52 * 51 * 50 * 49 / 4 / infoset_probs_bu[1] as u32, 1326 / 4); // Suited combo, 1326/4

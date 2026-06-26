@@ -1,39 +1,61 @@
+use crate::generated;
+
+/// Number of ranks, and the side length of the 13x13 hand grid.
+pub const N_RANKS: usize = 13;
 /// Number of infosets
-pub const N_INFOSETS: usize = 169;
+pub const N_INFOSETS: usize = N_RANKS * N_RANKS;
 /// Number of matchups between infosets
 pub const N_MATCHUPS: usize = N_INFOSETS * N_INFOSETS;
 
-/// Equity lookup table for each matchup
-pub static EQUITIES: [f32; N_MATCHUPS] = {
-    let bytes = include_bytes!("equities.bin");
-    let mut result = [0.0f32; N_MATCHUPS];
-    let mut i = 0;
-    while i < N_MATCHUPS {
-        let b = i * 4;
-        result[i] = f32::from_le_bytes([bytes[b], bytes[b + 1], bytes[b + 2], bytes[b + 3]]);
-        i += 1;
+/// Expands the generated equity table into the full `N_INFOSETS x N_INFOSETS`
+/// matrix of `f32` equities, laid out row-major as `equities[i * N_INFOSETS + j]`
+/// (the equity of infoset `i` against infoset `j`).
+///
+/// The generated table (see the C++ `EquityGenerator`) stores only the strict
+/// upper triangle as fixed-point `u16`: the diagonal is a known 0.5 (a hand has
+/// 50% equity against itself) and the lower triangle is the complement, since
+/// heads-up all-in equity is zero-sum.
+pub fn equities() -> Box<[f32; N_MATCHUPS]> {
+    let mut result = Box::new([0_f32; N_MATCHUPS]);
+    let mut k = 0; // running index into the flattened upper triangle
+    for i in 0..N_INFOSETS {
+        result[i * N_INFOSETS + i] = 0.5;
+        for j in (i + 1)..N_INFOSETS {
+            let equity = generated::equity::EQUITIES[k] as f32 / u16::MAX as f32;
+            result[i * N_INFOSETS + j] = equity;
+            result[j * N_INFOSETS + i] = 1.0 - equity;
+            k += 1;
+        }
     }
     result
-};
+}
 
-/// Raw matchup frequency counts, one byte each. Widened to `f32` at runtime
-/// (see `solve_push_fold`) rather than baked into the wasm blob as `f32`, which
-/// would quadruple this table's footprint.
-pub static MATCHUPS: [u8; N_MATCHUPS] = *include_bytes!("matchups.bin");
+/// Expands the generated matchup table into the full, symmetric
+/// `N_INFOSETS x N_INFOSETS` matrix of deal counts, widened to `f32` and laid
+/// out row-major as `matchups[i * N_INFOSETS + j]`.
+///
+/// The generated table (see the C++ `MatchupGenerator`) stores only the upper
+/// triangle including the diagonal; the matrix is symmetric, so the lower
+/// triangle mirrors it. Widening the `u8` counts to `f32` here lets the solver
+/// read them directly.
+pub fn matchups() -> Box<[f32; N_MATCHUPS]> {
+    let mut result = Box::new([0_f32; N_MATCHUPS]);
+    let mut k = 0; // running index into the flattened upper triangle (incl. diagonal)
+    for i in 0..N_INFOSETS {
+        for j in i..N_INFOSETS {
+            let count = generated::matchup::MATCHUPS[k] as f32;
+            result[i * N_INFOSETS + j] = count;
+            result[j * N_INFOSETS + i] = count;
+            k += 1;
+        }
+    }
+    result
+}
 
+/// Maps each infoset index to its label (e.g. `"AKs"`), flattening the generated
+/// 13x13 hand grid row-major to match the infoset numbering the lookup tables
+/// use (`i / N_RANKS` selects the row, `i % N_RANKS` the column).
 #[cfg(test)]
-pub const HANDS: [&str; N_INFOSETS] = [
-    "22", "32s", "42s", "52s", "62s", "72s", "82s", "92s", "T2s", "J2s", "Q2s", "K2s", "A2s",
-    "32o", "33", "43s", "53s", "63s", "73s", "83s", "93s", "T3s", "J3s", "Q3s", "K3s", "A3s",
-    "42o", "43o", "44", "54s", "64s", "74s", "84s", "94s", "T4s", "J4s", "Q4s", "K4s", "A4s",
-    "52o", "53o", "54o", "55", "65s", "75s", "85s", "95s", "T5s", "J5s", "Q5s", "K5s", "A5s",
-    "62o", "63o", "64o", "65o", "66", "76s", "86s", "96s", "T6s", "J6s", "Q6s", "K6s", "A6s",
-    "72o", "73o", "74o", "75o", "76o", "77", "87s", "97s", "T7s", "J7s", "Q7s", "K7s", "A7s",
-    "82o", "83o", "84o", "85o", "86o", "87o", "88", "98s", "T8s", "J8s", "Q8s", "K8s", "A8s",
-    "92o", "93o", "94o", "95o", "96o", "97o", "98o", "99", "T9s", "J9s", "Q9s", "K9s", "A9s",
-    "T2o", "T3o", "T4o", "T5o", "T6o", "T7o", "T8o", "T9o", "TT", "JTs", "QTs", "KTs", "ATs",
-    "J2o", "J3o", "J4o", "J5o", "J6o", "J7o", "J8o", "J9o", "JTo", "JJ", "QJs", "KJs", "AJs",
-    "Q2o", "Q3o", "Q4o", "Q5o", "Q6o", "Q7o", "Q8o", "Q9o", "QTo", "QJo", "QQ", "KQs", "AQs",
-    "K2o", "K3o", "K4o", "K5o", "K6o", "K7o", "K8o", "K9o", "KTo", "KJo", "KQo", "KK", "AKs",
-    "A2o", "A3o", "A4o", "A5o", "A6o", "A7o", "A8o", "A9o", "ATo", "AJo", "AQo", "AKo", "AA",
-];
+pub fn hands() -> [&'static str; N_INFOSETS] {
+    std::array::from_fn(|i| generated::hands::HANDS[i / N_RANKS][i % N_RANKS])
+}

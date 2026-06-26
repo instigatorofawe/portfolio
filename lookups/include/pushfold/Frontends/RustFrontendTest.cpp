@@ -101,6 +101,31 @@ TEST(RustFrontendTest, EmitsAttributeAbove2DStatic) {
               "];\n");
 }
 
+TEST(RustFrontendTest, EmitsModuleDeclaration) {
+    const std::string output = Generate([](RustFrontend& fe) { fe.EmitModule("equity"); });
+    EXPECT_EQ(output, "pub mod equity;\n");
+}
+
+TEST(RustFrontendTest, EmitsGatedModuleDeclaration) {
+    const std::string output = Generate([](RustFrontend& fe) { fe.EmitModule("hands", "#[cfg(test)]"); });
+    EXPECT_EQ(output,
+              "#[cfg(test)]\n"
+              "pub mod hands;\n");
+}
+
+TEST(RustFrontendTest, EmitsModuleDeclarationsContiguously) {
+    const std::string output = Generate([](RustFrontend& fe) {
+        fe.EmitModule("equity");
+        fe.EmitModule("hands", "#[cfg(test)]");
+        fe.EmitModule("matchup");
+    });
+    EXPECT_EQ(output,
+              "pub mod equity;\n"
+              "#[cfg(test)]\n"
+              "pub mod hands;\n"
+              "pub mod matchup;\n");
+}
+
 TEST(RustFrontendTest, SeparatesConsecutiveTablesWithBlankLine) {
     const std::array<std::uint8_t, 1> a = {1};
     const std::array<std::uint8_t, 1> b = {2};
