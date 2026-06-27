@@ -21,11 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The lookups CMake build fetches OMPEval over SSH (git@github.com:...).
-      # Runners have no SSH key, so rewrite those clones to HTTPS.
-      - name: Use HTTPS for github.com clones
-        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
-
       - name: Install GCC 14
         run: |
           sudo apt-get update
@@ -89,3 +84,22 @@ jobs:
 
       - name: Unit tests
         run: pnpm -C liuran test:unit --run --passWithNoTests
+
+      # Everything below only runs once all stages above have passed, and only
+      # for pushes to main (never for pull requests).
+      - name: Set up SSH for deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Configure git identity for deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: liuran
+        run: npx gh-pages -d build -t true -r git@github.com:instigatorofawe/instigatorofawe.github.io.git

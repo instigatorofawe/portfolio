@@ -42,7 +42,7 @@ set(OMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     ompeval
-    GIT_REPOSITORY git@github.com:instigatorofawe/OMPEval.git
+    GIT_REPOSITORY https://github.com/instigatorofawe/OMPEval.git
     GIT_TAG 1c5f82495017f2503b5fa57126c54c28309c3c7f
 )
 FetchContent_MakeAvailable(ompeval)
