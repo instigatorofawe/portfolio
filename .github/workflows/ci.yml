@@ -73,6 +73,16 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Generated files that are committed (e.g. lookup tables) must stay in
+      # sync with their sources. If the build rewrote any tracked file, fail and
+      # show what changed so it can be regenerated and committed.
+      - name: Verify build did not modify tracked files
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::The build modified tracked files. Regenerate and commit them, or stop tracking generated output."
+            exit 1
+          fi
+
       - name: Type-check
         run: pnpm check
 

@@ -21,7 +21,8 @@
 					{title}
 				{/if}
 			</p>
-			<p class="authors">{authors}</p>
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -- content is rendered from trusted local files -->
+			<p class="authors">{@html authors}</p>
 			<p class="meta">
 				<span class="journal">{journal}</span>, {year}
 				{#if git}

@@ -11,9 +11,8 @@
 <main>
 	<h1>Selected publications</h1>
 	<p>
-		For a complete list, see my
-		<a href="https://scholar.google.com/citations?user=bshgBtkAAAAJ&hl=en">Google Scholar Profile</a
-		>
+		For a complete list, see
+		<a href="https://scholar.google.com/citations?user=bshgBtkAAAAJ&hl=en">Google Scholar</a>.
 	</p>
 	<p style="text-align: right;">(*) denotes equal contribution</p>
 	<Publications publications={data.publications} />

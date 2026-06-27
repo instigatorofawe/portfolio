@@ -28,11 +28,11 @@
 	</div>
 	<main class="about-right-container">
 		<h1>About</h1>
-		<p>I'm joining Google as a Research Data Scientist, working on AI metrics.</p>
+		<p>I'm joining Google as a Research Data Scientist.</p>
 		<p>
-			Previously, I worked at Apple as a Machine Learning Algorithms Engineer. I developed methods
-			for sensor fusion, motion, touch, and force sensing, as well as haptics and audio rendering on
-			iPad and Apple Pencil.
+			Previously, I worked at Apple as a Machine Learning Algorithms Engineer. I developed real-time
+			signal processing methods for sensor fusion and state estimation, motion, touch, and force
+			sensing, as well as embedded rendering of haptics and audio.
 		</p>
 		<p>
 			I was a Postdoctoral Scholar with
@@ -40,16 +40,16 @@
 				>Patrick Purdon</a
 			>
 			in the department of Anesthesiology, Perioperative and Pain Medicine at Stanford University, and
-			previously at Massachusetts General Hospital. My Postdoctoral research was funded in part by the
-			NIH through an NIGMS NRSA fellowship (<a
+			previously at Massachusetts General Hospital. My research in causal inference and state space modeling
+			for treatment optimization in anesthesia and surgical pain management was funded in part by an NIH
+			NIGMS NRSA F32 fellowship (<a
 				href="https://reporter.nih.gov/search/I7PVmY38_EGQRCTeSb2Yzg/project-details/10899776#description"
 				target="_blank"
 				rel="noopener noreferrer">F32GM148114</a
-			>). I worked on causal inference and state space modeling for treatment optimization in
-			anesthesia and pain management.
+			>).
 		</p>
 		<p>
-			I completed both my PhD (2021) and my BS (2021) in Biomedical Engineering at Johns Hopkins
+			I completed both my PhD (2021) and my BS (2016) in Biomedical Engineering at Johns Hopkins
 			University.
 		</p>
 		<p style="color: var(--muted);">This page was last updated on {lastUpdated}.</p>

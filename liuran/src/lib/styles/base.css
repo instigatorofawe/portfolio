@@ -59,6 +59,13 @@ p {
 	font-size: var(--text-base);
 }
 
+/* The UA rule `b, strong { font-weight: bolder }` resolves to 400 against the
+   inherited weight of 300 on <p>, so force an absolute weight. */
+b,
+strong {
+	font-weight: 700;
+}
+
 a {
 	color: var(--link);
 	text-decoration: none;
