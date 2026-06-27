@@ -30,6 +30,7 @@ TEST(RustFrontendTest, Emits1DUnsignedArrayAsNumbers) {
     const std::array<std::uint8_t, 3> values = {0, 200, 255};
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("BYTES", values); });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub static BYTES: [u8; 3] = [\n"
               "    0, 200, 255,\n"
               "];\n");
@@ -39,6 +40,7 @@ TEST(RustFrontendTest, Emits1DFloatArrayWithForcedDecimalPoint) {
     const std::array<float, 3> values = {0.5f, 1.0f, 0.0f};
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("FLOATS", values); });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub static FLOATS: [f32; 3] = [\n"
               "    0.5, 1.0, 0.0,\n"
               "];\n");
@@ -51,6 +53,7 @@ TEST(RustFrontendTest, Emits1DArrayValuesOnOneLine) {
     }
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("SEQ", values); });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub static SEQ: [u16; 13] = [\n"
               "    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,\n"
               "];\n");
@@ -60,6 +63,7 @@ TEST(RustFrontendTest, Emits2DArrayWithNestedBrackets) {
     const std::array<std::array<float, 2>, 2> values = {{{0.5f, 0.25f}, {0.75f, 1.0f}}};
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("TABLE", values); });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub static TABLE: [[f32; 2]; 2] = [\n"
               "    [0.5, 0.25],\n"
               "    [0.75, 1.0],\n"
@@ -70,6 +74,7 @@ TEST(RustFrontendTest, EmitsStringArrayAsStrSlices) {
     const std::array<std::string_view, 2> values = {"AKs", "QQ"};
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("HANDS", values); });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub static HANDS: [&str; 2] = [\n"
               "    \"AKs\", \"QQ\",\n"
               "];\n");
@@ -86,6 +91,7 @@ TEST(RustFrontendTest, EmitsAttributeAboveStatic) {
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("GATED", values, "#[cfg(test)]"); });
     EXPECT_EQ(output,
               "#[cfg(test)]\n"
+              "#[rustfmt::skip]\n"
               "pub static GATED: [u8; 1] = [\n"
               "    1,\n"
               "];\n");
@@ -96,6 +102,7 @@ TEST(RustFrontendTest, EmitsAttributeAbove2DStatic) {
     const std::string output = Generate([&](RustFrontend& fe) { fe.EmitArray("HANDS", values, "#[cfg(test)]"); });
     EXPECT_EQ(output,
               "#[cfg(test)]\n"
+              "#[rustfmt::skip]\n"
               "pub static HANDS: [[&str; 1]; 1] = [\n"
               "    [\"AA\"],\n"
               "];\n");
@@ -134,10 +141,12 @@ TEST(RustFrontendTest, SeparatesConsecutiveTablesWithBlankLine) {
         fe.EmitArray("B", b);
     });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub static A: [u8; 1] = [\n"
               "    1,\n"
               "];\n"
               "\n"
+              "#[rustfmt::skip]\n"
               "pub static B: [u8; 1] = [\n"
               "    2,\n"
               "];\n");

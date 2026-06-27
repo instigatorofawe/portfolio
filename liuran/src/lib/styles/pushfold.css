@@ -1,0 +1,219 @@
+/* Styles for the push/fold solver visualization (PushFold.svelte).
+ *
+ * Imported as a plain stylesheet (so it lives outside Svelte's scoped <style>),
+ * everything is namespaced under .pushfold to keep the deliberately generic
+ * class names (cell, row, fold, selector…) from leaking into the global sheet.
+ *
+ * Cell geometry is driven by custom properties so the layout responds to the
+ * breakpoint purely in CSS — no JS width tracking. Each strategy bar reads its
+ * fill fraction (0–1) from an inline --fill on its container and resolves its
+ * height with calc(), instead of the component pre-multiplying a pixel height.
+ */
+
+.pushfold {
+	/* Local viz palette, following the token convention in tokens.css. */
+	--push: rgb(233, 150, 122); /* salmon — button push */
+	--call: rgb(143, 188, 139); /* green — big-blind call */
+	--fold-color: rgb(109, 162, 192); /* blue — fold */
+	--surface: #efefef; /* control / selector surface */
+	--surface-hover: #dfdfdf;
+	--grid-line: var(--ink);
+
+	/* Cell geometry scales fluidly with the viewport instead of snapping at a
+	   breakpoint: the 13-column grid grows to fill the width left after the 50px
+	   selector column and the page's 1rem side padding, but is capped at 51px per
+	   cell and never shrinks below 21px. Bar height/width derive from the cell so
+	   proportions hold at every size. --cell-height is the span a fully-played
+	   (fill = 1) bar fills. */
+	--cell-size: clamp(21px, calc((100vw - 50px - 2 * var(--space-4)) / 13), 51px);
+	--cell-height: calc(var(--cell-size) - 1px);
+	--bar-width: calc(var(--cell-size) - 2px);
+
+	font-family: var(--font-sans);
+}
+
+/* Controls -------------------------------------------------------------- */
+
+.pushfold .controls {
+	display: flex;
+}
+
+.pushfold .configs {
+	display: flex;
+	place-items: center;
+	font-size: var(--text-base);
+	margin: auto;
+}
+
+.pushfold .configs-wrapper {
+	display: flex;
+	flex-direction: row;
+	margin: var(--space-4) 0;
+	place-items: center;
+}
+
+.pushfold .configs-inputs {
+	margin: var(--space-4) auto;
+}
+
+.pushfold .config-input {
+	margin: var(--space-1);
+	width: 55px;
+}
+
+.pushfold button {
+	border-radius: var(--space-2);
+	border: 1px solid transparent;
+	padding: 0.6em 1.2em;
+	margin: var(--space-1);
+	font-size: var(--text-base);
+	font-weight: 500;
+	font-family: inherit;
+	cursor: pointer;
+	transition: border-color 0.2s;
+}
+
+.pushfold button:hover {
+	background-color: var(--surface-hover);
+}
+
+/* Grid ------------------------------------------------------------------ */
+
+.pushfold .wrapper {
+	display: flex;
+	flex-direction: row;
+}
+
+.pushfold .row {
+	display: flex;
+}
+
+.pushfold .cell {
+	width: var(--cell-size);
+	height: var(--cell-size);
+	border: 1px solid var(--grid-line);
+	margin-right: -1px;
+	margin-bottom: -1px;
+	display: flex;
+	/* Label tracks the cell size (≈16px at the 51px cap), floored for legibility. */
+	font-size: max(8px, calc(var(--cell-size) * 0.31));
+	position: relative;
+}
+
+.pushfold .cell:hover {
+	cursor: pointer;
+	background-color: var(--hairline);
+}
+
+.pushfold .cell-label {
+	margin: auto;
+}
+
+/* Strategy bars: heights resolve from the --fill fraction set on the
+   container, so no pixel height is computed in JS. */
+.pushfold .strategy-indicator {
+	position: absolute;
+}
+
+.pushfold .bet,
+.pushfold .call,
+.pushfold .fold {
+	position: relative;
+	width: var(--bar-width);
+	z-index: -1;
+}
+
+.pushfold .bet,
+.pushfold .call {
+	height: calc(var(--cell-height) * var(--fill, 0));
+}
+
+.pushfold .fold {
+	height: calc(var(--cell-height) * (1 - var(--fill, 0)));
+}
+
+/* BU/BB selector -------------------------------------------------------- */
+
+.pushfold .selector-col {
+	width: 50px;
+	border: 1px solid var(--grid-line);
+	margin-right: -1px;
+	margin-bottom: -1px;
+}
+
+.pushfold .selector {
+	/* Half the grid height: 13 cells, less the 12 overlapping -1px margins. */
+	height: calc((13 * var(--cell-size) - 12px) / 2);
+	display: flex;
+	background-color: var(--surface);
+}
+
+.pushfold .selector:hover {
+	cursor: pointer;
+	background-color: var(--surface-hover);
+}
+
+.pushfold .selector-label {
+	margin: auto;
+}
+
+/* Loading + summaries --------------------------------------------------- */
+
+.pushfold .loading {
+	display: flex;
+	place-items: center;
+	justify-content: center;
+	/* Reserve the full grid height so the layout doesn't jump when it loads. */
+	min-height: calc(13 * var(--cell-size) - 12px);
+	color: var(--muted);
+	font-size: var(--text-base);
+}
+
+.pushfold .push-summary,
+.pushfold .call-summary,
+.pushfold .fold-summary {
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--space-1);
+	margin: var(--space-1);
+}
+
+/* Semantic colors shared by selector, bars, and summaries. */
+.pushfold .bu-selected,
+.pushfold .bu-selected:hover,
+.pushfold .bet,
+.pushfold .push-summary {
+	background-color: var(--push);
+}
+
+.pushfold .bb-selected,
+.pushfold .bb-selected:hover,
+.pushfold .call,
+.pushfold .call-summary {
+	background-color: var(--call);
+}
+
+.pushfold .fold-summary,
+.pushfold .fold {
+	background-color: var(--fold-color);
+}
+
+/* The grid itself scales fluidly (see --cell-size above); this breakpoint only
+   reflows the controls, which is a discrete layout change rather than a resize. */
+@media only screen and (max-width: 1024px) {
+	.pushfold button {
+		font-size: var(--text-sm);
+	}
+
+	.pushfold .configs {
+		font-size: var(--text-sm);
+	}
+
+	.pushfold .configs-wrapper {
+		flex-direction: column;
+	}
+
+	.pushfold .input-container {
+		margin: 0;
+		align-self: end;
+	}
+}

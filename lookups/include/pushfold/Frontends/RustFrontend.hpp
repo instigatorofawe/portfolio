@@ -58,7 +58,7 @@ class RustFrontend {
     template <typename T, std::size_t N>
     void EmitArray(std::string_view name, const std::array<T, N>& values, std::string_view attribute = {}) {
         Separate();
-        EmitAttribute(attribute);
+        EmitStaticAttributes(attribute);
         Write("pub static {}: [{}; {}] = [", name, TypeName<T>(), N);
         for (std::size_t i = 0; i < N; ++i) {
             Write("{}{},", i == 0 ? "\n    " : " ", FormatScalar(values[i]));
@@ -76,7 +76,7 @@ class RustFrontend {
     void EmitArray(std::string_view name, const std::array<std::array<T, N>, M>& values,
                    std::string_view attribute = {}) {
         Separate();
-        EmitAttribute(attribute);
+        EmitStaticAttributes(attribute);
         Write("pub static {}: [[{}; {}]; {}] = [", name, TypeName<T>(), N, M);
         for (std::size_t i = 0; i < M; ++i) {
             Write("\n    [");
@@ -127,6 +127,18 @@ class RustFrontend {
         if (!attribute.empty()) {
             Write("{}\n", attribute);
         }
+    }
+
+    // Writes the attribute lines that sit directly above a generated static: the
+    // optional caller @p attribute (e.g. "#[cfg(test)]") followed by an
+    // #[rustfmt::skip]. The tables are emitted in a deterministic, column-packed
+    // layout; the skip stops `cargo fmt` from reflowing them — pure churn on a
+    // file that is regenerated from scratch. An outer attribute is used (rather
+    // than a file-level inner #![rustfmt::skip]) because custom inner attributes
+    // are unstable on the stable toolchain.
+    void EmitStaticAttributes(std::string_view attribute) {
+        EmitAttribute(attribute);
+        Write("#[rustfmt::skip]\n");
     }
 
     // Spelling of the Rust element type written into the [T; N] declaration.
