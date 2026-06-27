@@ -89,6 +89,18 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # The C++ test target lives behind PROJECT_IS_TOP_LEVEL, which is set by the
+      # `cmake -S lookups` configure the Build step already ran for code
+      # generation. test:cpp reconfigures (a no-op here) so it also works
+      # standalone, then builds and runs the gtest suite via ctest.
+      - name: C++ tests
+        run: pnpm test:cpp
+
+      # Exercises the Rust solver against the committed generated tables that the
+      # Build step regenerated above.
+      - name: Rust tests
+        run: pnpm test:rust
+
       - name: Install Playwright (chromium)
         run: pnpm -C liuran exec playwright install --with-deps chromium
 

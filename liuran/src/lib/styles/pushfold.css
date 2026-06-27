@@ -136,14 +136,22 @@
 
 .pushfold .selector-col {
 	width: 50px;
-	border: 1px solid var(--grid-line);
+	/* The wrapper is a flex row, so this column already stretches to the grid's
+	   height. Lay the two selectors out as a flex column and let them split that
+	   height with flex: 1 — computing each half in px instead rounds the fluid
+	   --cell-size independently, so the two halves can sum to 1px more or less
+	   than the grid depending on the cell size. */
+	display: flex;
+	flex-direction: column;
+	margin-top: 1px;
 	margin-right: -1px;
 	margin-bottom: -1px;
 }
 
 .pushfold .selector {
-	/* Half the grid height: 13 cells, less the 12 overlapping -1px margins. */
-	height: calc((13 * var(--cell-size) - 12px) / 2);
+	flex: 1;
+	margin-top: -1px;
+	border: 1px solid var(--grid-line);
 	display: flex;
 	background-color: var(--surface);
 }

@@ -43,7 +43,7 @@
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -- essay titles are author-authored trusted content -->
 					<td class="essayTableCell">{@html essay.title} </td>
 					<td class="essayTableCell" style="text-align: right;">
-						{new Date(essay.date).toLocaleDateString()}
+						{new Date(essay.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
 					</td>
 				</tr>
 			{/if}
