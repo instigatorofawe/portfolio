@@ -96,8 +96,53 @@ fn update_strategy<const N: usize>(
     elem_add(total_prob, prob);
 }
 
+/// Why the solver rejected its inputs. Exported as a `#[wasm_bindgen]` enum, so
+/// it crosses into JS as a discriminant the caller can compare against
+/// `SolverError.*` rather than parsing a free-text string. The human-readable
+/// message for each variant lives on the consumer (see PushFold.svelte).
 #[wasm_bindgen]
-pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SolverError {
+    /// stack, SB, or ante was NaN or infinite.
+    NonFiniteInput,
+    /// stack was zero or negative.
+    StackNotPositive,
+    /// SB or ante was negative.
+    NegativeBlindOrAnte,
+    /// SB was larger than the stack.
+    SmallBlindExceedsStack,
+    /// iter was zero.
+    ZeroIterations,
+}
+
+/// Rejects inputs that would drive the solver into undefined territory (negative
+/// stacks, non-finite values, zero iterations). Returning a `Result` rather than
+/// panicking is deliberate: a panic in wasm aborts and poisons the module
+/// instance, so every later call would fail too. On the `Err` path wasm-bindgen
+/// throws the `SolverError` discriminant as a JS exception the caller can catch.
+fn validate(stack: f32, sb: f32, ante: f32, iter: u32) -> Result<(), SolverError> {
+    if ![stack, sb, ante].iter().all(|v| v.is_finite()) {
+        return Err(SolverError::NonFiniteInput);
+    }
+    if stack <= 0.0 {
+        return Err(SolverError::StackNotPositive);
+    }
+    if sb < 0.0 || ante < 0.0 {
+        return Err(SolverError::NegativeBlindOrAnte);
+    }
+    if sb > stack {
+        return Err(SolverError::SmallBlindExceedsStack);
+    }
+    if iter == 0 {
+        return Err(SolverError::ZeroIterations);
+    }
+    Ok(())
+}
+
+#[wasm_bindgen]
+pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Result<Vec<f32>, SolverError> {
+    validate(stack, sb, ante, iter)?;
+
     // The matchup table ships as a symmetric upper triangle of `u8` counts to
     // keep the wasm blob small; expand it once into the full `f32` matrix the
     // solver reads from.
@@ -311,7 +356,7 @@ pub fn solve_push_fold(stack: f32, sb: f32, ante: f32, iter: u32) -> Vec<f32> {
 
     // wasm-bindgen requires an owned, dynamically-sized return value across the
     // ABI, so the two strategy arrays are concatenated into a `Vec` here.
-    [avg_strat_bu, avg_strat_bb].concat()
+    Ok([avg_strat_bu, avg_strat_bb].concat())
 }
 
 #[cfg(test)]
@@ -412,6 +457,34 @@ mod tests {
 
     #[test]
     fn test_push_fold() {
-        solve_push_fold(5.0, 0.5, 0.125, 200);
+        solve_push_fold(5.0, 0.5, 0.125, 200).unwrap();
+    }
+
+    #[test]
+    fn test_validate_accepts_reasonable_inputs() {
+        assert!(validate(5.0, 0.5, 0.125, 200).is_ok());
+        assert!(validate(1.0, 0.5, 0.0, 1).is_ok()); // no ante, sb == stack edge
+    }
+
+    #[test]
+    fn test_validate_rejects_bad_inputs() {
+        use SolverError::*;
+        assert_eq!(validate(f32::NAN, 0.5, 0.125, 200), Err(NonFiniteInput));
+        assert_eq!(
+            validate(5.0, f32::INFINITY, 0.125, 200),
+            Err(NonFiniteInput)
+        );
+        assert_eq!(validate(0.0, 0.5, 0.125, 200), Err(StackNotPositive));
+        assert_eq!(validate(-5.0, 0.5, 0.125, 200), Err(StackNotPositive));
+        assert_eq!(validate(5.0, -0.5, 0.125, 200), Err(NegativeBlindOrAnte));
+        assert_eq!(validate(5.0, 0.5, -0.1, 200), Err(NegativeBlindOrAnte));
+        assert_eq!(validate(5.0, 6.0, 0.125, 200), Err(SmallBlindExceedsStack));
+        assert_eq!(validate(5.0, 0.5, 0.125, 0), Err(ZeroIterations));
+    }
+
+    #[test]
+    fn test_push_fold_rejects_invalid_inputs() {
+        assert!(solve_push_fold(-1.0, 0.5, 0.125, 200).is_err());
+        assert!(solve_push_fold(5.0, 0.5, 0.125, 0).is_err());
     }
 }

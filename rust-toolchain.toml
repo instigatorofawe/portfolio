@@ -1,0 +1,9 @@
+# Pin the Rust toolchain so the WASM solver is byte-reproducible across machines.
+# rustc bakes its own version's stdlib source paths (/rustc/<commit-hash>/library/...)
+# into the emitted wasm. Those aren't covered by build-pushfold.sh's CARGO_HOME
+# remap, so an unpinned `stable` on CI diverges from the committed pkg/ whenever the
+# runner's stable differs from the one that built it. Keep this in sync with the
+# version installed in .github/workflows/ci.yml.
+[toolchain]
+channel = "1.96.0"
+targets = ["wasm32-unknown-unknown"]

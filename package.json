@@ -10,7 +10,7 @@
 		"clean:generated": "rm -rf pushfold/src/generated liuran/src/lib/generated liuran/src/lib/pkg",
 		"clean": "nx reset && pnpm clean:generated && rm -rf lookups/build pushfold/target liuran/.svelte-kit liuran/build",
 		"rebuild": "pnpm clean && pnpm build",
-		"ci:local": "pnpm build && pnpm check && pnpm lint && pnpm test:cpp && pnpm test:rust && pnpm -C liuran test:unit --run --passWithNoTests",
+		"ci:local": "pnpm build && pnpm check && pnpm lint && pnpm test:cpp && pnpm test:rust && pnpm -C liuran test:unit --run --passWithNoTests && pnpm test:e2e",
 		"test:cpp": "cmake -S lookups -B lookups/build && cmake --build lookups/build --target pushfold_lookups_tests && ctest --test-dir lookups/build --output-on-failure",
 		"test:rust": "cargo test --manifest-path pushfold/Cargo.toml",
 		"preview": "pnpm -C liuran preview",

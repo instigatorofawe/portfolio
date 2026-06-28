@@ -57,6 +57,10 @@
 		margin: 0 0 var(--space-1);
 	}
 
+	:global .authors b {
+		color: var(--accent);
+	}
+
 	.meta {
 		color: var(--muted);
 		font-size: var(--text-sm);

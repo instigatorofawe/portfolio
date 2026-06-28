@@ -21,7 +21,32 @@
 	let stack = $state(5.0);
 	let sb = $state(0.5);
 	let ante = $state(0.125);
-	let strategy = $derived(solve ? solve(stack, sb, ante, N_ITER) : null);
+
+	// Light client-side mirror of the solver's own validation (see validate() in
+	// pushfold.rs). Rust remains authoritative, but checking here gives immediate
+	// feedback and keeps us from firing the solver with junk. Empty number inputs
+	// bind to null in Svelte; otherwise-invalid ones to NaN.
+	let validationError = $derived.by(() => {
+		if ([stack, sb, ante].some((v) => v == null || !Number.isFinite(v)))
+			return 'Enter numeric values for stack, SB, and ante.';
+		if (stack <= 0) return 'Stack must be positive.';
+		if (sb < 0 || ante < 0) return 'SB and ante must be non-negative.';
+		if (sb > stack) return 'SB cannot exceed the stack.';
+		return null;
+	});
+
+	let strategy = $derived.by(() => {
+		if (!solve || validationError) return null;
+		try {
+			return solve(stack, sb, ante, N_ITER);
+		} catch (e) {
+			// The Rust layer rejected something the UI check missed; degrade
+			// gracefully rather than crash the component.
+			console.error('solver rejected inputs', e);
+			return null;
+		}
+	});
+
 	let selected = $state('bu');
 
 	let frequencies = $derived.by(() => {
@@ -51,13 +76,20 @@
 	<div class="controls">
 		<div class="configs-wrapper configs-inputs">
 			<div class="configs input-container">
-				Stack (BB): <input bind:value={stack} class="config-input" type="number" step="0.5" />
+				Stack (BB):
+				<input bind:value={stack} class="config-input" type="number" step="0.5" min="0.5" />
 			</div>
 			<div class="configs input-container">
-				SB (BB): <input bind:value={sb} class="config-input" type="number" step="0.1" />
+				SB (BB): <input bind:value={sb} class="config-input" type="number" step="0.1" min="0" />
 			</div>
 			<div class="configs input-container">
-				Ante (BB):<input bind:value={ante} class="config-input" type="number" step="0.005" />
+				Ante (BB):<input
+					bind:value={ante}
+					class="config-input"
+					type="number"
+					step="0.005"
+					min="0"
+				/>
 			</div>
 		</div>
 		<div class="configs">
@@ -65,7 +97,9 @@
 		</div>
 	</div>
 
-	{#if strategy}
+	{#if validationError}
+		<div class="loading" role="alert">{validationError}</div>
+	{:else if strategy}
 		<div class="wrapper">
 			<div class="selector-col">
 				<div

@@ -11,6 +11,7 @@ fn bench_solve_push_fold(c: &mut Criterion) {
                 black_box(0.125),
                 black_box(200),
             )
+            .unwrap()
         })
     });
 }

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	export type Essay = {
@@ -39,9 +38,15 @@
 	<tbody>
 		{#each essays as essay (essay.id)}
 			{#if match(essay.title, query)}
-				<tr class="essayTableRow" onclick={() => goto(resolve('/essays/[id]', { id: essay.id }))}>
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -- essay titles are author-authored trusted content -->
-					<td class="essayTableCell">{@html essay.title} </td>
+				<tr class="essayTableRow">
+					<td class="essayTableCell">
+						<h5>
+							<a href={resolve('/essays/[id]', { id: essay.id })}>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- essay titles are author-authored trusted content -->
+								{@html essay.title}</a
+							>
+						</h5>
+					</td>
 					<td class="essayTableCell" style="text-align: right;">
 						{new Date(essay.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
 					</td>
@@ -68,15 +73,16 @@
 
 	.essaysTable th {
 		font-size: var(--text-lg);
-	}
-
-	.essayTableRow:hover {
-		background-color: var(--hairline);
-		cursor: pointer;
+		color: var(--accent);
 	}
 
 	.essayTableCell:not(:last-child) {
-		padding-right: var(--space-4);
+		padding-right: var(--space-8);
+	}
+
+	.essaysTable h5 {
+		color: var(--link);
+		margin: 0;
 	}
 
 	.searchBox {

@@ -19,27 +19,29 @@ jobs:
       CC: gcc-14
       CXX: g++-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install GCC 14
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-14 g++-14
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: |
             pnpm-lock.yaml
             liuran/pnpm-lock.yaml
 
+      # Pinned (not @stable) so the toolchain matches rust-toolchain.toml and the
+      # committed wasm stays byte-reproducible. Bump both together on upgrade.
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.96.0
         with:
           targets: wasm32-unknown-unknown
 
@@ -56,7 +58,7 @@ jobs:
           tool: wasm-bindgen-cli@0.2.125
 
       - name: Cache Nx
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .nx/cache
           key: nx-${{ runner.os }}-${{ github.sha }}
@@ -77,11 +79,36 @@ jobs:
       # sync with their sources. If the build rewrote any tracked file, fail and
       # show what changed so it can be regenerated and committed.
       - name: Verify build did not modify tracked files
+        id: verify_clean
         run: |
           if ! git diff --exit-code; then
             echo "::error::The build modified tracked files. Regenerate and commit them, or stop tracking generated output."
             exit 1
           fi
+
+      # Only runs when the verify step above found a diff. The generated wasm is
+      # the usual culprit: rustc bakes absolute build paths into panic-location
+      # strings, so a binary built here can differ from the committed one even
+      # with an identical toolchain. This dumps exactly what diverged — byte
+      # offset, embedded path strings, and the runner's paths — so we can tell a
+      # path leak (fixable via --remap-path-prefix) from genuine codegen drift.
+      - name: Diagnose wasm divergence
+        if: failure() && steps.verify_clean.outcome == 'failure'
+        run: |
+          WASM=liuran/src/lib/pkg/pushfold_bg.wasm
+          git show HEAD:"$WASM" > /tmp/committed.wasm
+          echo "== runner paths =="
+          echo "CARGO_HOME=${CARGO_HOME:-<unset>}  HOME=$HOME  RUSTFLAGS=${RUSTFLAGS:-<unset>}"
+          echo "== size / sha256 (committed vs built) =="
+          ls -l /tmp/committed.wasm "$WASM"
+          sha256sum /tmp/committed.wasm "$WASM"
+          echo "== first 20 differing bytes (offset value-committed value-built) =="
+          cmp -l /tmp/committed.wasm "$WASM" | head -20 || true
+          echo "== embedded path strings: committed (<) vs built (>) =="
+          diff \
+            <(strings /tmp/committed.wasm | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
+            <(strings "$WASM"            | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
+            || true
 
       - name: Type-check
         run: pnpm check
@@ -107,6 +134,12 @@ jobs:
       - name: Unit tests
         run: pnpm -C liuran test:unit --run --passWithNoTests
 
+      # Smoke-tests the production build via Playwright's preview webServer.
+      # Chromium was installed above; run the suite directly to avoid the
+      # redundant `playwright install` baked into the test:e2e script.
+      - name: E2E smoke tests
+        run: pnpm -C liuran exec playwright test
+
       # Everything below only runs once all stages above have passed, and only
       # for pushes to main (never for pull requests).
       - name: Set up SSH for deploy
@@ -124,4 +157,4 @@ jobs:
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: liuran
-        run: npx gh-pages -d build -t true -r git@github.com:instigatorofawe/instigatorofawe.github.io.git
+        run: npx gh-pages -d build -t -r git@github.com:instigatorofawe/instigatorofawe.github.io.git

@@ -1,0 +1,12 @@
+{
+	// SvelteKit's generated tsconfig only includes src/test/tests, so e2e files
+	// fall outside the main project and the editor's TS service doesn't type them.
+	// This config scopes the e2e tests on their own, pulling in @types/node for the
+	// node builtins (fs, url) the Playwright helpers use. It's editor-only;
+	// `pnpm check` still runs svelte-check against ../tsconfig.json.
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"types": ["node"]
+	},
+	"include": ["**/*.ts"]
+}

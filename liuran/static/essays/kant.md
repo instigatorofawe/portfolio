@@ -40,7 +40,7 @@ what “Christ [would command them to do], nor this king.” On his deathbed, Go
 he states that he repents “all but one.” In effect, Godfrey is consciously risking his immortal soul to say that he is
 proud of his son – and we as viewers are invited to be skeptical as to whether this act merits the possibility of
 eternal condemnation. Balian explicitly voices his skepticism of dogma when he tells the Patriarch, as they are
-cremating the bodies of the fallen to prevent disease, that “God will understand. And if he does, he is not God.”
+cremating the bodies of the fallen to prevent disease, that “God will understand. And if he doesn't, he is not God.”
 
 Conversely, upon being knighted by Godfrey shortly before his death, Balian takes his knightly oaths seriously. He is
 charged to: “Be without fear in the face of your enemies. / Be brave and upright, that God may love thee. / Speak the

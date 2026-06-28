@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./pushfold_bg.js";
 __wbg_set_wasm(wasm);
 
 export {
-    solve_push_fold
+    SolverError, solve_push_fold
 } from "./pushfold_bg.js";
