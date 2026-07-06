@@ -1,6 +1,7 @@
 // Aggregate per-hand push/fold (BU) and call/fold (BB) frequencies from a
-// solver strategy. The strategy is a flat array of 169 button entries followed
-// by 169 big-blind entries, each indexed by position in the 13x13 hand grid.
+// solver strategy. The solver returns two parallel arrays of 169 entries — the
+// button's push frequency and the big blind's call frequency — each indexed by
+// position in the 13x13 hand grid.
 //
 // Each grid cell maps to a different number of concrete two-card combos: pairs
 // (the diagonal) have 6, suited hands (upper triangle) have 4, and offsuit
@@ -30,17 +31,21 @@ export type Frequencies = {
 };
 
 /**
- * Collapse a solver strategy into overall BU/BB action frequencies, each
- * expressed as a fraction in [0, 1].
+ * Collapse a solver's push (BU) and call (BB) strategies into overall BU/BB
+ * action frequencies, each expressed as a fraction in [0, 1]. `buPush` and
+ * `bbCall` are the two 169-entry arrays returned by the solver.
  */
-export function computeFrequencies(strategy: ArrayLike<number>): Frequencies {
+export function computeFrequencies(
+	buPush: ArrayLike<number>,
+	bbCall: ArrayLike<number>
+): Frequencies {
 	let push = 0;
 	let call = 0;
 
 	for (let index = 0; index < N_HANDS; index++) {
 		const combos = combosAt(Math.floor(index / GRID_SIZE), index % GRID_SIZE);
-		push += (strategy[index] * combos) / TOTAL_COMBOS;
-		call += (strategy[index + N_HANDS] * combos) / TOTAL_COMBOS;
+		push += (buPush[index] * combos) / TOTAL_COMBOS;
+		call += (bbCall[index] * combos) / TOTAL_COMBOS;
 	}
 
 	return { push, buFold: 1 - push, call, bbFold: 1 - call };

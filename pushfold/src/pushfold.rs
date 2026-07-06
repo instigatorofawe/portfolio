@@ -1,7 +1,11 @@
 use crate::constants::*;
 use nalgebra::{DMatrix, DVector};
+use wasm_bindgen::prelude::*;
 
-/// Why the solver rejected its inputs.
+/// Why the solver rejected its inputs. Annotated for wasm-bindgen so it crosses
+/// into JS as a numeric discriminant (see `bindings.rs`); the human-readable
+/// message for each variant lives on the consumer.
+#[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SolverError {
     /// stack, SB, or ante was NaN or infinite.
@@ -22,8 +26,8 @@ pub enum SolverError {
 pub struct Strategies {
     pub bu_push: DVector<f32>,
     pub bb_call: DVector<f32>,
-    /// Nash gap of the averaged strategy pair, in units of the small blind's
-    /// bet size per deal (sum of both players' best-response improvements).
+    /// Nash gap of the averaged strategy pair, in big blinds
+    /// per deal (sum of both players' best-response improvements).
     pub exploitability: f32,
 }
 
