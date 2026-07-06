@@ -1,6 +1,9 @@
 use crate::generated;
 use nalgebra::DMatrix;
 
+#[cfg(test)]
+pub const F32_EPSILON: f32 = 1e-5;
+
 /// Number of ranks, and the side length of the 13x13 hand grid.
 pub const N_RANKS: usize = 13;
 /// Number of infosets
@@ -59,4 +62,48 @@ pub fn matchups() -> DMatrix<f32> {
 #[cfg(test)]
 pub fn hands() -> [&'static str; N_INFOSETS] {
     std::array::from_fn(|i| generated::hands::HANDS[i / N_RANKS][i % N_RANKS])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn valid_equities() {
+        let equity_table = equities();
+
+        assert_eq!(equity_table.shape(), (N_INFOSETS, N_INFOSETS));
+
+        for i in 0..N_INFOSETS {
+            // Check all diagonal entries equal to 0.5
+            assert_eq!(equity_table[(i, i)], 0.5);
+            for j in (i + 1)..N_INFOSETS {
+                // Check all off-diagonal entries are complementary
+                assert!(equity_table[(i, j)] >= 0.0);
+                assert!(equity_table[(i, j)] <= 1.0);
+                assert!(equity_table[(j, i)] >= 0.0);
+                assert!(equity_table[(j, i)] <= 1.0);
+                assert!(
+                    f32::abs(1.0 - (equity_table[(i, j)] + equity_table[(j, i)])) < F32_EPSILON
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn valid_matchups() {
+        let matchup_table = matchups();
+
+        assert_eq!(matchup_table.shape(), (N_INFOSETS, N_INFOSETS));
+
+        // Check that total matchups are equivalent to 52 choose 2, 2 = 52 * 51 * 50 * 49 / 4
+        let mut total: u32 = 0;
+        for i in 0..N_INFOSETS {
+            for j in 0..N_INFOSETS {
+                total += matchup_table[(i, j)] as u32;
+            }
+        }
+
+        assert_eq!(total, 52 * 51 * 50 * 49 / 4);
+    }
 }
