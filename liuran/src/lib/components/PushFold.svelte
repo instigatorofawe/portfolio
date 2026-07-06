@@ -82,11 +82,13 @@
 		if (!solution) return null;
 		const { push, buFold, call, bbFold } = computeFrequencies(solution.buPush, solution.bbCall);
 		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 });
+		// Percentages below 0.01% are visual noise; clamp them to a flat 0.000%.
+		const formatPct = (value: number) => (value < 0.01 ? '0.000' : formatter.format(value));
 		return [
-			formatter.format(push * 100),
-			formatter.format(buFold * 100),
-			formatter.format(call * 100),
-			formatter.format(bbFold * 100)
+			formatPct(push * 100),
+			formatPct(buFold * 100),
+			formatPct(call * 100),
+			formatPct(bbFold * 100)
 		];
 	});
 
@@ -95,7 +97,9 @@
 	let exploitability = $derived.by(() => {
 		if (!solution) return null;
 		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
-		return formatter.format(solution.exploitability * 100);
+		const value = solution.exploitability * 100;
+		// Below 0.000001 bb/100 the number is effectively zero; show a flat value.
+		return value < 0.000001 ? '0.000000' : formatter.format(value);
 	});
 
 	function reset() {
