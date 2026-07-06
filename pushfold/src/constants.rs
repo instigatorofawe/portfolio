@@ -1,6 +1,7 @@
 use crate::generated;
 use nalgebra::DMatrix;
 
+/// Tolerance of floating point equality
 #[cfg(test)]
 pub const F32_EPSILON: f32 = 1e-5;
 
