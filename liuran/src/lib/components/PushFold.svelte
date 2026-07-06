@@ -1,21 +1,31 @@
 <script lang="ts">
 	import { HANDS } from '$lib/generated/hands';
-	import { computeFrequencies, N_HANDS } from '$lib/pushfold/frequencies';
+	import { computeFrequencies } from '$lib/pushfold/frequencies';
 	import '$lib/styles/pushfold.css';
 
-	type SolveFn = (typeof import('$lib/pkg/pushfold'))['solve_push_fold'];
+	type SolverModule = typeof import('$lib/pkg/pushfold');
+	type Solver = InstanceType<SolverModule['PushFoldSolver']>;
 
-	const N_ITER = 150;
+	const N_ITER = 1000;
 
 	// The solver is backed by a WASM module that instantiates asynchronously.
 	// Loading it through a dynamic import (resolved only once the module is ready)
 	// keeps this component out of the static module graph that has to await the
 	// WASM, which is what broke client-side navigation in dev, and avoids running
-	// the solver during static prerendering.
-	let solve = $state<SolveFn | null>(null);
+	// the solver during static prerendering. The solver builds its lookup tables
+	// once on construction, so we keep a single instance and reuse it per solve.
+	let solver = $state<Solver | null>(null);
 
 	$effect(() => {
-		import('$lib/pkg/pushfold').then((m) => (solve = m.solve_push_fold));
+		let instance: Solver | null = null;
+		import('$lib/pkg/pushfold').then((m) => {
+			instance = new m.PushFoldSolver();
+			solver = instance;
+		});
+		return () => {
+			instance?.free();
+			solver = null;
+		};
 	});
 
 	let stack = $state(5.0);
@@ -35,10 +45,29 @@
 		return null;
 	});
 
-	let strategy = $derived.by(() => {
-		if (!solve || validationError) return null;
+	type Solution = {
+		/** Button push frequency per infoset (169 entries, row-major grid). */
+		buPush: Float32Array;
+		/** Big blind call frequency per infoset (169 entries, row-major grid). */
+		bbCall: Float32Array;
+		/** Nash gap of the returned pair, in BB per deal. */
+		exploitability: number;
+	};
+
+	let solution = $derived.by<Solution | null>(() => {
+		if (!solver || validationError) return null;
 		try {
-			return solve(stack, sb, ante, N_ITER);
+			// The returned Strategies is a WASM object whose getters copy on each
+			// access; read each field once into a plain JS value, then free the
+			// object so its WASM memory isn't held until GC.
+			const result = solver.solve(stack, sb, ante, N_ITER);
+			const solution = {
+				buPush: result.bu_push,
+				bbCall: result.bb_call,
+				exploitability: result.exploitability
+			};
+			result.free();
+			return solution;
 		} catch (e) {
 			// The Rust layer rejected something the UI check missed; degrade
 			// gracefully rather than crash the component.
@@ -50,8 +79,8 @@
 	let selected = $state('bu');
 
 	let frequencies = $derived.by(() => {
-		if (!strategy) return null;
-		const { push, buFold, call, bbFold } = computeFrequencies(strategy);
+		if (!solution) return null;
+		const { push, buFold, call, bbFold } = computeFrequencies(solution.buPush, solution.bbCall);
 		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 });
 		return [
 			formatter.format(push * 100),
@@ -59,6 +88,14 @@
 			formatter.format(call * 100),
 			formatter.format(bbFold * 100)
 		];
+	});
+
+	// Exploitability is the Nash gap in BB per deal; scale to the standard
+	// BB/100 (big blinds won per 100 hands) win-rate unit poker players read.
+	let exploitability = $derived.by(() => {
+		if (!solution) return null;
+		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
+		return formatter.format(solution.exploitability * 100);
 	});
 
 	function reset() {
@@ -99,7 +136,7 @@
 
 	{#if validationError}
 		<div class="loading" role="alert">{validationError}</div>
-	{:else if strategy}
+	{:else if solution}
 		<div class="wrapper">
 			<div class="selector-col">
 				<div
@@ -132,8 +169,8 @@
 								<div
 									class="strategy-indicator"
 									style="--fill: {selected == 'bu'
-										? strategy[rowIndex * 13 + colIndex]
-										: strategy[N_HANDS + rowIndex * 13 + colIndex]};"
+										? solution.buPush[rowIndex * 13 + colIndex]
+										: solution.bbCall[rowIndex * 13 + colIndex]};"
 								>
 									{#if selected == 'bu'}
 										<div class="bet"></div>
@@ -168,6 +205,13 @@
 				<span class="call-summary">call {frequencies[2]}%</span>
 				<span class="fold-summary">fold {frequencies[3]}%</span>
 			</div>
+
+			{#if exploitability}
+				<div class="configs">
+					Exp:
+					<span class="exploitability-summary">{exploitability} bb/100</span>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

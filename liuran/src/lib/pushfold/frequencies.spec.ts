@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { combosAt, computeFrequencies, N_HANDS, TOTAL_COMBOS, GRID_SIZE } from './frequencies';
 
-/** Build a 338-length strategy from separate BU and BB per-hand arrays. */
-function makeStrategy(bu: number[], bb: number[]): Float32Array {
-	return Float32Array.from([...bu, ...bb]);
-}
-
 describe('combosAt', () => {
 	it('returns 6 combos for pairs (diagonal)', () => {
 		expect(combosAt(0, 0)).toBe(6);
@@ -35,8 +30,7 @@ describe('combosAt', () => {
 
 describe('computeFrequencies', () => {
 	it('reports zero action when nothing is played', () => {
-		const strategy = makeStrategy(Array(N_HANDS).fill(0), Array(N_HANDS).fill(0));
-		expect(computeFrequencies(strategy)).toEqual({
+		expect(computeFrequencies(Array(N_HANDS).fill(0), Array(N_HANDS).fill(0))).toEqual({
 			push: 0,
 			buFold: 1,
 			call: 0,
@@ -45,8 +39,10 @@ describe('computeFrequencies', () => {
 	});
 
 	it('reports full action when every hand is played', () => {
-		const strategy = makeStrategy(Array(N_HANDS).fill(1), Array(N_HANDS).fill(1));
-		const { push, buFold, call, bbFold } = computeFrequencies(strategy);
+		const { push, buFold, call, bbFold } = computeFrequencies(
+			Array(N_HANDS).fill(1),
+			Array(N_HANDS).fill(1)
+		);
 		expect(push).toBeCloseTo(1, 10);
 		expect(buFold).toBeCloseTo(0, 10);
 		expect(call).toBeCloseTo(1, 10);
@@ -57,29 +53,29 @@ describe('computeFrequencies', () => {
 		// Only the first hand (index 0, a pair = 6 combos) is pushed on the button.
 		const bu = Array(N_HANDS).fill(0);
 		bu[0] = 1;
-		const strategy = makeStrategy(bu, Array(N_HANDS).fill(0));
 
-		const { push, buFold } = computeFrequencies(strategy);
+		const { push, buFold } = computeFrequencies(bu, Array(N_HANDS).fill(0));
 		expect(push).toBeCloseTo(6 / TOTAL_COMBOS, 10);
 		expect(buFold).toBeCloseTo(1 - 6 / TOTAL_COMBOS, 10);
 	});
 
-	it('reads BU and BB from independent halves of the strategy', () => {
+	it('reads BU and BB from their independent strategy arrays', () => {
 		// Button pushes hand 0 (pair, 6 combos); big blind calls hand 1 (suited, 4 combos).
 		const bu = Array(N_HANDS).fill(0);
 		bu[0] = 1;
 		const bb = Array(N_HANDS).fill(0);
 		bb[1] = 1;
-		const strategy = makeStrategy(bu, bb);
 
-		const { push, call } = computeFrequencies(strategy);
+		const { push, call } = computeFrequencies(bu, bb);
 		expect(push).toBeCloseTo(6 / TOTAL_COMBOS, 10);
 		expect(call).toBeCloseTo(4 / TOTAL_COMBOS, 10);
 	});
 
 	it('handles fractional (mixed) strategies', () => {
 		// Half-pushing every hand should yield half the full-push frequency.
-		const strategy = makeStrategy(Array(N_HANDS).fill(0.5), Array(N_HANDS).fill(0));
-		expect(computeFrequencies(strategy).push).toBeCloseTo(0.5, 10);
+		expect(computeFrequencies(Array(N_HANDS).fill(0.5), Array(N_HANDS).fill(0)).push).toBeCloseTo(
+			0.5,
+			10
+		);
 	});
 });
