@@ -243,10 +243,43 @@ impl Default for PushFoldSolver {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{N_RANKS, hands};
 
     const STACK: f32 = 5.0;
     const SB: f32 = 0.5;
     const ANTE: f32 = 0.125;
+
+    /// Renders a strategy vector as the 13x13 hand grid, one cell per infoset
+    /// showing the label and its action frequency as a percentage. The layout
+    /// matches a standard range chart: pairs on the diagonal, suited hands in
+    /// the upper triangle, offsuit in the lower.
+    fn format_grid(strat: &DVector<f32>) -> String {
+        let labels = hands();
+        let mut out = String::new();
+        for r in 0..N_RANKS {
+            for c in 0..N_RANKS {
+                let i = r * N_RANKS + c;
+                out.push_str(&format!("{:>4} {:>3.0}%  ", labels[i], strat[i] * 100.0));
+            }
+            out.push('\n');
+        }
+        out
+    }
+
+    /// Solves at the shared stakes and prints both converged ranges. Run with
+    /// `cargo test -p pushfold print_strategies -- --nocapture` to see output.
+    #[test]
+    fn print_strategies() {
+        let mut solver = PushFoldSolver::new();
+        let out = solver.solve(STACK, SB, ANTE, 1000).unwrap();
+        println!(
+            "\nConverged strategies at stack={STACK}bb sb={SB} ante={ANTE} \
+             (exploitability {:.2e})",
+            out.exploitability
+        );
+        println!("\nButton push range:\n{}", format_grid(&out.bu_push));
+        println!("Big blind call range:\n{}", format_grid(&out.bb_call));
+    }
 
     #[test]
     fn test_validate() {

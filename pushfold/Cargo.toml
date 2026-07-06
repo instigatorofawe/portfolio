@@ -17,3 +17,7 @@ wasm-bindgen = "0.2.125"
 [dev-dependencies]
 criterion = "0.8.2"
 
+[[bench]]
+name = "solver"
+harness = false
+
