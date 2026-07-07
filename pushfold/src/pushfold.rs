@@ -63,6 +63,13 @@ pub struct PushFoldSolver {
     avg_bu: DVector<f32>,
     avg_bb: DVector<f32>,
     weight_sum: f32,
+
+    // Workspace for the per-iteration matrix-vector products; each is
+    // fully overwritten (gemv with beta = 0) before it is read.
+    u: DVector<f32>,
+    v: DVector<f32>,
+    r: DVector<f32>,
+    q: DVector<f32>,
 }
 
 /// Given clamped non-negative CFR+ regrets, computes frequency of first action
@@ -126,6 +133,11 @@ impl PushFoldSolver {
             avg_bu: DVector::zeros(N_INFOSETS),
             avg_bb: DVector::zeros(N_INFOSETS),
             weight_sum: 0.0,
+
+            u: DVector::zeros(N_INFOSETS),
+            v: DVector::zeros(N_INFOSETS),
+            r: DVector::zeros(N_INFOSETS),
+            q: DVector::zeros(N_INFOSETS),
         }
     }
 
@@ -142,38 +154,7 @@ impl PushFoldSolver {
         self.setup(stack, sb, ante);
 
         for t in 1..=iterations {
-            // --- Button update (counterfactual weight: chance only) ---
-            let u = &self.matchup_table * &self.sigma_bb; // W * sigma_bb
-            let v = &self.p_call * &self.sigma_bb; //             B * sigma_bb
-            for i in 0..N_INFOSETS {
-                // Unnormalized counterfactual action values.
-                let v_push = v[i] + self.p_steal * (self.w_row[i] - u[i]);
-                let v_fold = self.p_fold * self.w_row[i];
-                let delta = v_push - v_fold;
-                // v(a) - v(node) factored: node value mixes the two actions.
-                self.r_bu_push[i] = (self.r_bu_push[i] + (1.0 - self.sigma_bu[i]) * delta).max(0.0);
-                self.r_bu_fold[i] = (self.r_bu_fold[i] - self.sigma_bu[i] * delta).max(0.0);
-                self.sigma_bu[i] = regret_match_binary(self.r_bu_push[i], self.r_bu_fold[i]);
-            }
-
-            // --- Big blind update, against the button's *new* strategy ---
-            // tr_mul computes A^T * x without materializing the transpose.
-            let r = self.matchup_table.tr_mul(&self.sigma_bu); // counterfactual reach
-            let q = self.p_call.tr_mul(&self.sigma_bu); //             call-payoff mass
-            for j in 0..N_INFOSETS {
-                // Big blind payoffs are the negation of the button's:
-                // v_call = -q[j], v_fold = -p_steal * r[j].
-                let delta = self.p_steal * r[j] - q[j];
-                self.r_bb_call[j] = (self.r_bb_call[j] + (1.0 - self.sigma_bb[j]) * delta).max(0.0);
-                self.r_bb_fold[j] = (self.r_bb_fold[j] - self.sigma_bb[j] * delta).max(0.0);
-                self.sigma_bb[j] = regret_match_binary(self.r_bb_call[j], self.r_bb_fold[j]);
-            }
-
-            // --- Linearly weighted strategy averaging (CFR+) ---
-            let w = t as f32;
-            self.avg_bu.axpy(w, &self.sigma_bu, 1.0);
-            self.avg_bb.axpy(w, &self.sigma_bb, 1.0);
-            self.weight_sum += w;
+            self.cfr_iterate(t);
         }
 
         let bu_push = &self.avg_bu / self.weight_sum;
@@ -191,6 +172,8 @@ impl PushFoldSolver {
 impl PushFoldSolver {
     /// Builds the stake-dependent contraction matrix and payoff constants,
     /// and resets the CFR state so each solve starts fresh.
+    ///
+    /// Positive payoff is for BU; negative payoff is for BB
     fn setup(&mut self, stack: f32, sb: f32, ante: f32) {
         self.p_fold = -sb - ante;
         self.p_steal = 1.0 + ante;
@@ -212,6 +195,53 @@ impl PushFoldSolver {
         self.avg_bu.fill(0.0);
         self.avg_bb.fill(0.0);
         self.weight_sum = 0.0;
+    }
+
+    /// One CFR+ iteration: alternating regret updates, then averaging.
+    fn cfr_iterate(&mut self, t: u32) {
+        self.update_bu();
+        self.update_bb();
+        self.update_average(t);
+    }
+
+    /// Button regret update (counterfactual weight: chance only).
+    fn update_bu(&mut self) {
+        self.u.gemv(1.0, &self.matchup_table, &self.sigma_bb, 0.0); // W * sigma_bb
+        self.v.gemv(1.0, &self.p_call, &self.sigma_bb, 0.0); //      B * sigma_bb
+        for i in 0..N_INFOSETS {
+            // Unnormalized counterfactual action values.
+            let v_push = self.v[i] + self.p_steal * (self.w_row[i] - self.u[i]);
+            let v_fold = self.p_fold * self.w_row[i];
+            let delta = v_push - v_fold;
+            // v(a) - v(node) factored: node value mixes the two actions.
+            self.r_bu_push[i] = (self.r_bu_push[i] + (1.0 - self.sigma_bu[i]) * delta).max(0.0);
+            self.r_bu_fold[i] = (self.r_bu_fold[i] - self.sigma_bu[i] * delta).max(0.0);
+            self.sigma_bu[i] = regret_match_binary(self.r_bu_push[i], self.r_bu_fold[i]);
+        }
+    }
+
+    /// Big blind regret update, against the button's *new* strategy.
+    fn update_bb(&mut self) {
+        // gemv_tr computes A^T * x without materializing the transpose.
+        self.r
+            .gemv_tr(1.0, &self.matchup_table, &self.sigma_bu, 0.0); // counterfactual reach
+        self.q.gemv_tr(1.0, &self.p_call, &self.sigma_bu, 0.0); //             call-payoff mass
+        for j in 0..N_INFOSETS {
+            // Big blind payoffs are the negation of the button's:
+            // v_call = -q[j], v_fold = -p_steal * r[j].
+            let delta = self.p_steal * self.r[j] - self.q[j];
+            self.r_bb_call[j] = (self.r_bb_call[j] + (1.0 - self.sigma_bb[j]) * delta).max(0.0);
+            self.r_bb_fold[j] = (self.r_bb_fold[j] - self.sigma_bb[j] * delta).max(0.0);
+            self.sigma_bb[j] = regret_match_binary(self.r_bb_call[j], self.r_bb_fold[j]);
+        }
+    }
+
+    /// Linearly weighted strategy averaging (CFR+).
+    fn update_average(&mut self, t: u32) {
+        let w = t as f32;
+        self.avg_bu.axpy(w, &self.sigma_bu, 1.0);
+        self.avg_bb.axpy(w, &self.sigma_bb, 1.0);
+        self.weight_sum += w;
     }
 
     /// Nash gap of a strategy pair: the sum of both players' best-response
