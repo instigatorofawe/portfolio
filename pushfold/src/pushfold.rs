@@ -3,8 +3,8 @@ use nalgebra::{DMatrix, DVector};
 use wasm_bindgen::prelude::*;
 
 /// Why the solver rejected its inputs. Annotated for wasm-bindgen so it crosses
-/// into JS as a numeric discriminant (see `bindings.rs`); the human-readable
-/// message for each variant lives on the consumer.
+/// into JS as a numeric discriminant; the human-readable message for each
+/// variant lives on the consumer.
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SolverError {
@@ -23,12 +23,37 @@ pub enum SolverError {
 /// Averaged (Nash-converging) strategies, indexed by canonical infoset
 /// (row-major over the 13x13 hand grid). Values are the push frequency for
 /// the button and the call frequency for the big blind.
+///
+/// wasm-bindgen surfaces this to JS as an opaque handle: the `bu_push` and
+/// `bb_call` getters flatten the nalgebra vectors into `Float32Array`-shaped
+/// `Vec<f32>`, so the `DVector` fields are `skip`ped (they can't cross into JS
+/// directly) and re-exposed through those getters.
+#[wasm_bindgen]
 pub struct Strategies {
+    #[wasm_bindgen(skip)]
     pub bu_push: DVector<f32>,
+    #[wasm_bindgen(skip)]
     pub bb_call: DVector<f32>,
-    /// Nash gap of the averaged strategy pair, in big blinds
-    /// per deal (sum of both players' best-response improvements).
+    /// Nash gap of the averaged strategy pair, in big blinds per deal (sum of
+    /// both players' best-response improvements). A plain scalar, so
+    /// wasm-bindgen exposes it directly; `readonly` keeps it getter-only.
+    #[wasm_bindgen(readonly)]
     pub exploitability: f32,
+}
+
+#[wasm_bindgen]
+impl Strategies {
+    /// Button push frequency per infoset (169 entries).
+    #[wasm_bindgen(getter)]
+    pub fn bu_push(&self) -> Vec<f32> {
+        self.bu_push.as_slice().to_vec()
+    }
+
+    /// Big blind call frequency per infoset (169 entries).
+    #[wasm_bindgen(getter)]
+    pub fn bb_call(&self) -> Vec<f32> {
+        self.bb_call.as_slice().to_vec()
+    }
 }
 
 /// Push/fold solver over the 169 canonical infosets.
@@ -42,6 +67,7 @@ pub struct Strategies {
 ///
 /// Sign convention: all payoffs are from the button's perspective; the big
 /// blind maximizes their negation.
+#[wasm_bindgen]
 pub struct PushFoldSolver {
     /// e(i, j): all-in equity of infoset i vs infoset j.
     equity_table: DMatrix<f32>,
@@ -90,10 +116,12 @@ fn validate(stack: f32, sb: f32, ante: f32, iterations: u32) -> Result<(), Solve
     Ok(())
 }
 
+#[wasm_bindgen]
 impl PushFoldSolver {
     /// Initializes the environment. The equity and matchup tables are
     /// constant for the lifetime of the solver; everything stake-dependent
     /// is rebuilt per solve.
+    #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         let equity_table = equities();
         let matchup_table = matchups();
@@ -106,22 +134,6 @@ impl PushFoldSolver {
             p_fold: 0.0,
             p_steal: 0.0,
         }
-    }
-
-    /// Builds the stake-dependent contraction matrix and payoff constants.
-    fn setup(&mut self, stack: f32, sb: f32, ante: f32) {
-        self.p_fold = -sb - ante;
-        self.p_steal = 1.0 + ante;
-
-        // Call payout: win or lose (stack + ante) scaled by equity edge.
-        let all_in = stack + ante;
-        self.b = self
-            .matchup_table
-            .zip_map(&self.equity_table, |w, e| w * (2.0 * e - 1.0) * all_in);
-
-        self.w_row = DVector::from_fn(self.matchup_table.nrows(), |i, _| {
-            self.matchup_table.row(i).sum()
-        });
     }
 
     /// Runs CFR+ (regret clamping, alternating updates, linear averaging)
@@ -199,6 +211,24 @@ impl PushFoldSolver {
             bb_call: avg_bb,
             exploitability,
         })
+    }
+}
+
+impl PushFoldSolver {
+    /// Builds the stake-dependent contraction matrix and payoff constants.
+    fn setup(&mut self, stack: f32, sb: f32, ante: f32) {
+        self.p_fold = -sb - ante;
+        self.p_steal = 1.0 + ante;
+
+        // Call payout: win or lose (stack + ante) scaled by equity edge.
+        let all_in = stack + ante;
+        self.b = self
+            .matchup_table
+            .zip_map(&self.equity_table, |w, e| w * (2.0 * e - 1.0) * all_in);
+
+        self.w_row = DVector::from_fn(self.matchup_table.nrows(), |i, _| {
+            self.matchup_table.row(i).sum()
+        });
     }
 
     /// Nash gap of a strategy pair: the sum of both players' best-response

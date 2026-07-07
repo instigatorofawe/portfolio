@@ -1,7 +1,15 @@
 /**
- * Push/fold solver handle. Constructing it builds the (constant) equity and
- * matchup lookup tables once; reuse the same handle to solve at different
- * stakes rather than paying that setup per solve.
+ * Push/fold solver over the 169 canonical infosets.
+ *
+ * All per-iteration work is four 169x169 matrix-vector products against two
+ * constant matrices: the matchup weights `W` (card removal baked into deal
+ * counts) and the weight-fused call payouts `B = W .* pc`. The full
+ * matchup-level (169^2) probability and EV matrices are never materialized;
+ * every quantity CFR needs is a contraction of those matrices with the
+ * players' strategy vectors.
+ *
+ * Sign convention: all payoffs are from the button's perspective; the big
+ * blind maximizes their negation.
  */
 export class PushFoldSolver {
     __destroy_into_raw() {
@@ -14,6 +22,11 @@ export class PushFoldSolver {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_pushfoldsolver_free(ptr, 0);
     }
+    /**
+     * Initializes the environment. The equity and matchup tables are
+     * constant for the lifetime of the solver; everything stake-dependent
+     * is rebuilt per solve.
+     */
     constructor() {
         const ret = wasm.pushfoldsolver_new();
         this.__wbg_ptr = ret;
@@ -21,8 +34,8 @@ export class PushFoldSolver {
         return this;
     }
     /**
-     * Runs CFR+ for `iterations` and returns the averaged strategies, or
-     * throws a [`SolverError`] into JS if the stakes are invalid.
+     * Runs CFR+ (regret clamping, alternating updates, linear averaging)
+     * and returns the averaged strategies with their exploitability.
      * @param {number} stack
      * @param {number} sb
      * @param {number} ante
@@ -49,8 +62,8 @@ if (Symbol.dispose) PushFoldSolver.prototype[Symbol.dispose] = PushFoldSolver.pr
 
 /**
  * Why the solver rejected its inputs. Annotated for wasm-bindgen so it crosses
- * into JS as a numeric discriminant (see `bindings.rs`); the human-readable
- * message for each variant lives on the consumer.
+ * into JS as a numeric discriminant; the human-readable message for each
+ * variant lives on the consumer.
  * @enum {0 | 1 | 2 | 3 | 4}
  */
 export const SolverError = Object.freeze({
@@ -77,10 +90,14 @@ export const SolverError = Object.freeze({
 });
 
 /**
- * Converged strategies from a solve. `bu_push` and `bb_call` are each 169
- * frequencies in `[0, 1]`, row-major over the 13x13 hand grid (the button's
- * push frequency and the big blind's call frequency respectively); wasm-bindgen
- * surfaces the getters to JS as `Float32Array`s.
+ * Averaged (Nash-converging) strategies, indexed by canonical infoset
+ * (row-major over the 13x13 hand grid). Values are the push frequency for
+ * the button and the call frequency for the big blind.
+ *
+ * wasm-bindgen surfaces this to JS as an opaque handle: the `bu_push` and
+ * `bb_call` getters flatten the nalgebra vectors into `Float32Array`-shaped
+ * `Vec<f32>`, so the `DVector` fields are `skip`ped (they can't cross into JS
+ * directly) and re-exposed through those getters.
  */
 export class Strategies {
     static __wrap(ptr) {
@@ -98,6 +115,16 @@ export class Strategies {
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_strategies_free(ptr, 0);
+    }
+    /**
+     * Nash gap of the averaged strategy pair, in big blinds per deal (sum of
+     * both players' best-response improvements). A plain scalar, so
+     * wasm-bindgen exposes it directly; `readonly` keeps it getter-only.
+     * @returns {number}
+     */
+    get exploitability() {
+        const ret = wasm.__wbg_get_strategies_exploitability(this.__wbg_ptr);
+        return ret;
     }
     /**
      * Big blind call frequency per infoset (169 entries).
@@ -132,14 +159,6 @@ export class Strategies {
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }
-    }
-    /**
-     * Nash gap of the returned strategy pair, in big-blind units per deal.
-     * @returns {number}
-     */
-    get exploitability() {
-        const ret = wasm.strategies_exploitability(this.__wbg_ptr);
-        return ret;
     }
 }
 if (Symbol.dispose) Strategies.prototype[Symbol.dispose] = Strategies.prototype.free;
