@@ -21,7 +21,7 @@
 					{title}
 				{/if}
 			</p>
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -- content is rendered from trusted local files -->
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -- authors are sanitized with DOMPurify in the publications loader -->
 			<p class="authors">{@html authors}</p>
 			<p class="meta">
 				<span class="journal">{journal}</span>, {year}

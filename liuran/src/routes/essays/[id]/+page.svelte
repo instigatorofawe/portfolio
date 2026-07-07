@@ -9,7 +9,7 @@
 	<title>Ran Liu - {plainTitle}</title>
 </svelte:head>
 
-<!-- eslint-disable-next-line svelte/no-at-html-tags -- content is markdown rendered from trusted local essay files -->
+<!-- eslint-disable-next-line svelte/no-at-html-tags -- rendered markdown is sanitized with DOMPurify in the loader -->
 <main>{@html data.content}</main>
 
 <style>
