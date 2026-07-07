@@ -42,7 +42,7 @@
 					<td class="essayTableCell">
 						<h5>
 							<a href={resolve('/essays/[id]', { id: essay.id })}>
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -- essay titles are author-authored trusted content -->
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- titles are sanitized with DOMPurify in the essays loader -->
 								{@html essay.title}</a
 							>
 						</h5>

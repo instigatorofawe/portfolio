@@ -19,7 +19,6 @@
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.60.0",
-		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.63.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
@@ -41,6 +40,7 @@
 		"vitest-browser-svelte": "^2.1.1"
 	},
 	"dependencies": {
+		"isomorphic-dompurify": "^3.18.0",
 		"marked": "^18.0.5",
 		"vite-plugin-wasm": "^3.6.0",
 		"yaml": "^2.9.0"
