@@ -76,7 +76,7 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(pushfold_lookups INTERFACE OpenMP::OpenMP_CXX)
 endif()
 
-add_executable(generate_headsup_lookups src/headsup/generate.cpp)
+add_executable(generate_headsup_lookups src/Headsup/generate.cpp)
 target_link_libraries(generate_headsup_lookups PRIVATE pushfold_lookups)
 target_compile_options(generate_headsup_lookups PRIVATE ${PUSHFOLD_WARNING_FLAGS})
 

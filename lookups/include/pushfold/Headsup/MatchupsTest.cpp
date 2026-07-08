@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 
-#include <pushfold/headsup/Matchups.hpp>
+#include <pushfold/Headsup/Matchups.hpp>
 
 #include "pushfold/Constants.hpp"
 

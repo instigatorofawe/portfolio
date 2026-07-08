@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "pushfold/Constants.hpp"
-#include "pushfold/headsup/Constants.hpp"
+#include "pushfold/Headsup/Constants.hpp"
 
 namespace pushfold::headsup {
 

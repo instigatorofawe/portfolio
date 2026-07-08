@@ -13,8 +13,8 @@
 #include <pushfold/Frontends/CppFrontend.hpp>
 #include <pushfold/Frontends/RustFrontend.hpp>
 #include <pushfold/Frontends/TypeScriptFrontend.hpp>
-#include <pushfold/headsup/Equity.hpp>
-#include <pushfold/headsup/Matchups.hpp>
+#include <pushfold/Headsup/Equity.hpp>
+#include <pushfold/Headsup/Matchups.hpp>
 
 namespace {
 
