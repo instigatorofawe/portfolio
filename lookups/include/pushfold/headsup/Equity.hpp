@@ -10,8 +10,9 @@
 #include <utility>
 
 #include "pushfold/Constants.hpp"
+#include "pushfold/headsup/Constants.hpp"
 
-namespace pushfold {
+namespace pushfold::headsup {
 
 /**
  * @brief Generates lookup table of equities
@@ -146,4 +147,4 @@ class EquityGenerator {
     }
 };
 
-}  // namespace pushfold
+}  // namespace pushfold::headsup

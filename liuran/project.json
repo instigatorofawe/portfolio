@@ -7,7 +7,7 @@
 			"executor": "nx:run-commands",
 			"cache": true,
 			"dependsOn": [
-				{ "projects": ["pushfold"], "target": "build-wasm" },
+				{ "projects": ["pushfold"], "target": "build-headsup-wasm" },
 				{ "projects": ["lookups"], "target": "generate-hands" }
 			],
 			"inputs": ["{projectRoot}/**/*"],

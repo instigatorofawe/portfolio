@@ -38,7 +38,7 @@ impl Strategies {
 }
 
 #[wasm_bindgen]
-pub struct PushFoldSolver {
+pub struct HeadsUpSolver {
     equity_table: DMatrix<f32>,
     matchup_table: DMatrix<f32>,
     w_row: DVector<f32>,
@@ -80,12 +80,7 @@ fn regret_match_binary(r_first: f32, r_second: f32) -> f32 {
     if total > 0.0 { r_first / total } else { 0.5 }
 }
 
-fn validate_pushfold_inputs(
-    stack: f32,
-    sb: f32,
-    ante: f32,
-    iterations: u32,
-) -> Result<(), SolverError> {
+fn validate_inputs(stack: f32, sb: f32, ante: f32, iterations: u32) -> Result<(), SolverError> {
     if ![stack, sb, ante].iter().all(|v| v.is_finite()) {
         return Err(SolverError::NonFiniteInput);
     }
@@ -105,7 +100,7 @@ fn validate_pushfold_inputs(
 }
 
 #[wasm_bindgen]
-impl PushFoldSolver {
+impl HeadsUpSolver {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         let equity_table = equities();
@@ -113,7 +108,7 @@ impl PushFoldSolver {
         // Total combos of BU hands
         let w_row = DVector::from_fn(matchup_table.nrows(), |i, _| matchup_table.row(i).sum());
 
-        PushFoldSolver {
+        HeadsUpSolver {
             equity_table,
             matchup_table,
             w_row,
@@ -150,7 +145,7 @@ impl PushFoldSolver {
         ante: f32,
         iterations: u32,
     ) -> Result<Strategies, SolverError> {
-        validate_pushfold_inputs(stack, sb, ante, iterations)?;
+        validate_inputs(stack, sb, ante, iterations)?;
         self.setup(stack, sb, ante);
 
         for t in 1..=iterations {
@@ -169,7 +164,7 @@ impl PushFoldSolver {
     }
 }
 
-impl PushFoldSolver {
+impl HeadsUpSolver {
     /// Builds the stake-dependent contraction matrix and payoff constants,
     /// and resets the CFR state so each solve starts fresh.
     ///
@@ -279,7 +274,7 @@ impl PushFoldSolver {
     }
 }
 
-impl Default for PushFoldSolver {
+impl Default for HeadsUpSolver {
     fn default() -> Self {
         Self::new()
     }
@@ -288,7 +283,7 @@ impl Default for PushFoldSolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::{N_RANKS, hands};
+    use pushfold_shared::{N_RANKS, hands};
 
     const STACK: f32 = 5.0;
     const SB: f32 = 0.5;
@@ -315,7 +310,7 @@ mod tests {
     /// `cargo test -p pushfold print_strategies -- --nocapture` to see output.
     #[test]
     fn print_strategies() {
-        let mut solver = PushFoldSolver::new();
+        let mut solver = HeadsUpSolver::new();
         let out = solver.solve(STACK, SB, ANTE, 1000).unwrap();
         println!(
             "\nConverged strategies at stack={STACK}bb sb={SB} ante={ANTE} \
@@ -329,33 +324,27 @@ mod tests {
     #[test]
     fn test_validate() {
         use SolverError::*;
-        assert!(validate_pushfold_inputs(5.0, 0.5, 0.125, 200).is_ok());
-        assert!(validate_pushfold_inputs(1.0, 0.5, 0.0, 1).is_ok());
+        assert!(validate_inputs(5.0, 0.5, 0.125, 200).is_ok());
+        assert!(validate_inputs(1.0, 0.5, 0.0, 1).is_ok());
         assert_eq!(
-            validate_pushfold_inputs(f32::NAN, 0.5, 0.125, 200),
+            validate_inputs(f32::NAN, 0.5, 0.125, 200),
             Err(NonFiniteInput)
         );
+        assert_eq!(validate_inputs(0.0, 0.5, 0.125, 200), Err(StackNotPositive));
         assert_eq!(
-            validate_pushfold_inputs(0.0, 0.5, 0.125, 200),
-            Err(StackNotPositive)
-        );
-        assert_eq!(
-            validate_pushfold_inputs(5.0, -0.5, 0.125, 200),
+            validate_inputs(5.0, -0.5, 0.125, 200),
             Err(NegativeBlindOrAnte)
         );
         assert_eq!(
-            validate_pushfold_inputs(5.0, 6.0, 0.125, 200),
+            validate_inputs(5.0, 6.0, 0.125, 200),
             Err(SmallBlindExceedsStack)
         );
-        assert_eq!(
-            validate_pushfold_inputs(5.0, 0.5, 0.125, 0),
-            Err(ZeroIterations)
-        );
+        assert_eq!(validate_inputs(5.0, 0.5, 0.125, 0), Err(ZeroIterations));
     }
 
     #[test]
     fn test_strategies_are_probabilities() {
-        let mut solver = PushFoldSolver::new();
+        let mut solver = HeadsUpSolver::new();
         let out = solver.solve(STACK, SB, ANTE, 200).unwrap();
         for x in out.bu_push.iter().chain(out.bb_call.iter()) {
             assert!((0.0..=1.0).contains(x), "strategy out of range: {x}");
@@ -367,7 +356,7 @@ mod tests {
         // AA is infoset 0 in the row-major 13x13 grid. At 5bb it is a pure
         // push and a pure call; with no epsilon floor the average should be
         // exactly (or extremely near) 1.
-        let mut solver = PushFoldSolver::new();
+        let mut solver = HeadsUpSolver::new();
         let out = solver.solve(STACK, SB, ANTE, 1000).unwrap();
         assert!(out.bu_push[0] > 0.999, "AA push freq {}", out.bu_push[0]);
         assert!(out.bb_call[0] > 0.999, "AA call freq {}", out.bb_call[0]);
@@ -375,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_converges() {
-        let mut solver = PushFoldSolver::new();
+        let mut solver = HeadsUpSolver::new();
         let coarse = solver.solve(STACK, SB, ANTE, 100).unwrap();
         let fine = solver.solve(STACK, SB, ANTE, 2000).unwrap();
         assert!(fine.exploitability >= 0.0);

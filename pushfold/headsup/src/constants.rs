@@ -1,14 +1,14 @@
-use crate::generated;
 use nalgebra::DMatrix;
+use pushfold_shared::generated;
+
+// Grid dimensions and the hand-label grid are game-agnostic and live in the
+// shared crate; re-export them so `use crate::constants::*` keeps working.
+pub use pushfold_shared::{N_INFOSETS, N_RANKS};
 
 /// Tolerance of floating point equality
 #[cfg(test)]
 pub const F32_EPSILON: f32 = 1e-5;
 
-/// Number of ranks, and the side length of the 13x13 hand grid.
-pub const N_RANKS: usize = 13;
-/// Number of infosets
-pub const N_INFOSETS: usize = N_RANKS * N_RANKS;
 /// Number of matchups between infosets
 pub const N_MATCHUPS: usize = N_INFOSETS * N_INFOSETS;
 
@@ -27,7 +27,7 @@ pub fn equities() -> DMatrix<f32> {
     for i in 0..N_INFOSETS {
         result[i * N_INFOSETS + i] = 0.5;
         for j in (i + 1)..N_INFOSETS {
-            let equity = generated::equity::EQUITIES[k] as f32 / u16::MAX as f32;
+            let equity = generated::headsup_equity::EQUITIES[k] as f32 / u16::MAX as f32;
             result[(i, j)] = equity;
             result[(j, i)] = 1.0 - equity;
             k += 1;
@@ -48,21 +48,13 @@ pub fn matchups() -> DMatrix<f32> {
     let mut k = 0; // running index into the flattened upper triangle (incl. diagonal)
     for i in 0..N_INFOSETS {
         for j in i..N_INFOSETS {
-            let count = generated::matchup::MATCHUPS[k] as f32;
+            let count = generated::headsup_matchup::MATCHUPS[k] as f32;
             result[(i, j)] = count;
             result[(j, i)] = count;
             k += 1;
         }
     }
     result
-}
-
-/// Maps each infoset index to its label (e.g. `"AKs"`), flattening the generated
-/// 13x13 hand grid row-major to match the infoset numbering the lookup tables
-/// use (`i / N_RANKS` selects the row, `i % N_RANKS` the column).
-#[cfg(test)]
-pub fn hands() -> [&'static str; N_INFOSETS] {
-    std::array::from_fn(|i| generated::hands::HANDS[i / N_RANKS][i % N_RANKS])
 }
 
 #[cfg(test)]

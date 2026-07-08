@@ -12,17 +12,17 @@
 				"{projectRoot}/include/**/*"
 			],
 			"outputs": [
-				"{workspaceRoot}/pushfold/src/generated/equity.rs",
-				"{workspaceRoot}/pushfold/src/generated/matchup.rs",
-				"{workspaceRoot}/pushfold/src/generated/hands.rs",
-				"{workspaceRoot}/pushfold/src/generated/mod.rs"
+				"{workspaceRoot}/pushfold/shared/src/generated/headsup_equity.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/headsup_matchup.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/hands.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/mod.rs"
 			],
 			"options": {
 				"parallel": false,
 				"commands": [
 					"cmake -S lookups -B lookups/build",
-					"cmake --build lookups/build --target generate_pushfold_lookups",
-					"lookups/build/generate_pushfold_lookups pushfold/src/generated rust"
+					"cmake --build lookups/build --target generate_headsup_lookups",
+					"lookups/build/generate_headsup_lookups pushfold/shared/src/generated rust"
 				]
 			}
 		},
@@ -37,7 +37,7 @@
 			],
 			"outputs": ["{workspaceRoot}/liuran/src/lib/generated/hands.ts"],
 			"options": {
-				"command": "lookups/build/generate_pushfold_lookups liuran/src/lib/generated ts --hands"
+				"command": "lookups/build/generate_headsup_lookups liuran/src/lib/generated ts --hands"
 			}
 		}
 	}

@@ -11,8 +11,9 @@
 #include "pushfold/Combinator.hpp"
 #include "pushfold/Constants.hpp"
 #include "pushfold/Deck.hpp"
+#include "pushfold/headsup/Constants.hpp"
 
-namespace pushfold {
+namespace pushfold::headsup {
 
 /**
  * @brief Generates a lookup table counting how often each infoset matchup deals.
@@ -149,4 +150,4 @@ class MatchupGenerator {
     }
 };
 
-}  // namespace pushfold
+}  // namespace pushfold::headsup

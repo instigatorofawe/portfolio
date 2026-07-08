@@ -463,13 +463,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "pushfold"
+name = "pushfold-headsup"
 version = "0.1.0"
 dependencies = [
  "criterion",
  "nalgebra",
+ "pushfold-shared",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "pushfold-shared"
+version = "0.1.0"
 
 [[package]]
 name = "quote"

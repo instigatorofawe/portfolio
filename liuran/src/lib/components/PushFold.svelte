@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { HANDS } from '$lib/generated/hands';
-	import { computeFrequencies } from '$lib/pushfold/frequencies';
+	import { computeFrequencies } from '$lib/pushfold/headsup/frequencies';
 	import '$lib/styles/pushfold.css';
 
-	type SolverModule = typeof import('$lib/pkg/pushfold');
-	type Solver = InstanceType<SolverModule['PushFoldSolver']>;
+	type SolverModule = typeof import('$lib/pkg/headsup/pushfold_headsup');
+	type Solver = InstanceType<SolverModule['HeadsUpSolver']>;
 
 	const N_ITER = 1000;
 
@@ -18,8 +18,8 @@
 
 	$effect(() => {
 		let instance: Solver | null = null;
-		import('$lib/pkg/pushfold').then((m) => {
-			instance = new m.PushFoldSolver();
+		import('$lib/pkg/headsup/pushfold_headsup').then((m) => {
+			instance = new m.HeadsUpSolver();
 			solver = instance;
 		});
 		return () => {
@@ -33,7 +33,7 @@
 	let ante = $state(0.125);
 
 	// Light client-side mirror of the solver's own validation (see validate() in
-	// pushfold.rs). Rust remains authoritative, but checking here gives immediate
+	// solver.rs). Rust remains authoritative, but checking here gives immediate
 	// feedback and keeps us from firing the solver with junk. Empty number inputs
 	// bind to null in Svelte; otherwise-invalid ones to NaN.
 	let validationError = $derived.by(() => {

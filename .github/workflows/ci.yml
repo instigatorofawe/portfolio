@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # lookups/src/generate.cpp uses C++23 <print>, which needs GCC 14's
+      # lookups/src/headsup/generate.cpp uses C++23 <print>, which needs GCC 14's
       # libstdc++. Point CMake at it via the standard CC/CXX env vars.
       CC: gcc-14
       CXX: g++-14
@@ -95,7 +95,7 @@ jobs:
       - name: Diagnose wasm divergence
         if: failure() && steps.verify_clean.outcome == 'failure'
         run: |
-          WASM=liuran/src/lib/pkg/pushfold_bg.wasm
+          WASM=liuran/src/lib/pkg/headsup/pushfold_headsup_bg.wasm
           git show HEAD:"$WASM" > /tmp/committed.wasm
           echo "== runner paths =="
           echo "CARGO_HOME=${CARGO_HOME:-<unset>}  HOME=$HOME  RUSTFLAGS=${RUSTFLAGS:-<unset>}"

@@ -12,8 +12,6 @@ inline constexpr size_t kNumCards = kNumRanks * kNumSuits;
 
 inline constexpr size_t kNumInfosets = 169;
 inline constexpr size_t kNumMatchups = kNumInfosets * kNumInfosets;
-inline constexpr size_t kNumEquityMatchups = kNumInfosets * (kNumInfosets - 1) / 2;  // Size of equity lookup table
-inline constexpr size_t kNumMatchupEntries = kNumInfosets * (kNumInfosets + 1) / 2;  // Size of matchup lookup table
 
 inline constexpr std::array<std::string_view, kNumSuits> kSuits = {"Clubs", "Diamonds", "Hearts", "Spades"};
 

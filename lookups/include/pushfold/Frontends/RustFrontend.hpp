@@ -97,9 +97,19 @@ class RustFrontend {
      * declaration (e.g. "#[cfg(test)]" to keep a test-only module out of release
      * builds). Unlike EmitArray, declarations are written contiguously with no
      * separating blank line so they read as a single module list.
+     *
+     * Each declaration also carries an #[rustfmt::skip]: rustfmt's
+     * `reorder_modules` would otherwise alphabetize the `pub mod` lines, churning
+     * this generated file whenever the emission order differs from alphabetical.
+     * The skip goes on every declaration (not just the first) so the order is
+     * pinned regardless of the order tables happen to be generated in. As with
+     * the statics, an outer attribute is used rather than a file-level inner
+     * #![rustfmt::skip] because custom inner attributes are unstable on the stable
+     * toolchain.
      */
     void EmitModule(std::string_view name, std::string_view attribute = {}) {
         EmitAttribute(attribute);
+        Write("#[rustfmt::skip]\n");
         Write("pub mod {};\n", name);
         wrote_any_ = true;
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Build the push-fold solver to WASM and emit JS bindings into the SvelteKit app.
-# Run from anywhere; paths resolve relative to the repo root.
+# Build the heads-up push-fold solver to WASM and emit JS bindings into the
+# SvelteKit app. Run from anywhere; paths resolve relative to the repo root.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,13 +17,14 @@ cd "$REPO_ROOT"
 CARGO_HOME_PATH="${CARGO_HOME:-$HOME/.cargo}"
 export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=${CARGO_HOME_PATH}=/cargo"
 
-cargo build --release --target=wasm32-unknown-unknown --manifest-path pushfold/Cargo.toml
+cargo build --release --target=wasm32-unknown-unknown --manifest-path pushfold/Cargo.toml \
+	-p pushfold-headsup
 
 # --remove-producers-section drops the telemetry `producers` custom section,
 # which records the toolchain provenance (rustc/clang/walrus versions). Its
 # contents vary by build host even with an identical toolchain, so leaving it in
 # makes the emitted wasm differ between machines (local vs CI) despite identical
 # code. It has no runtime effect.
-wasm-bindgen pushfold/target/wasm32-unknown-unknown/release/pushfold.wasm \
-	--out-dir liuran/src/lib/pkg \
+wasm-bindgen pushfold/target/wasm32-unknown-unknown/release/pushfold_headsup.wasm \
+	--out-dir liuran/src/lib/pkg/headsup \
 	--remove-producers-section

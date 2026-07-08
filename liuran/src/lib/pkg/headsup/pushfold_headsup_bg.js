@@ -1,18 +1,18 @@
-export class PushFoldSolver {
+export class HeadsUpSolver {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        PushFoldSolverFinalization.unregister(this);
+        HeadsUpSolverFinalization.unregister(this);
         return ptr;
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_pushfoldsolver_free(ptr, 0);
+        wasm.__wbg_headsupsolver_free(ptr, 0);
     }
     constructor() {
-        const ret = wasm.pushfoldsolver_new();
+        const ret = wasm.headsupsolver_new();
         this.__wbg_ptr = ret;
-        PushFoldSolverFinalization.register(this, this.__wbg_ptr, this);
+        HeadsUpSolverFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
@@ -27,7 +27,7 @@ export class PushFoldSolver {
     solve(stack, sb, ante, iterations) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.pushfoldsolver_solve(retptr, this.__wbg_ptr, stack, sb, ante, iterations);
+            wasm.headsupsolver_solve(retptr, this.__wbg_ptr, stack, sb, ante, iterations);
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
@@ -40,7 +40,7 @@ export class PushFoldSolver {
         }
     }
 }
-if (Symbol.dispose) PushFoldSolver.prototype[Symbol.dispose] = PushFoldSolver.prototype.free;
+if (Symbol.dispose) HeadsUpSolver.prototype[Symbol.dispose] = HeadsUpSolver.prototype.free;
 
 /**
  * Input validation errors
@@ -123,9 +123,9 @@ export function __wbindgen_cast_0000000000000001(arg0) {
     const ret = arg0;
     return addHeapObject(ret);
 }
-const PushFoldSolverFinalization = (typeof FinalizationRegistry === 'undefined')
+const HeadsUpSolverFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_pushfoldsolver_free(ptr, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_headsupsolver_free(ptr, 1));
 const StrategiesFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_strategies_free(ptr, 1));

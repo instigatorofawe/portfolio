@@ -2,10 +2,10 @@
 #include <cstdint>
 #include <memory>
 
-#include <pushfold/Equity.hpp>
-#include <pushfold/Matchups.hpp>
+#include <pushfold/headsup/Equity.hpp>
+#include <pushfold/headsup/Matchups.hpp>
 
-namespace pushfold {
+namespace pushfold::headsup {
 namespace {
 
 // Mirrors generate.cpp: a fresh generator solved and quantized to the fixed
@@ -38,4 +38,4 @@ void BM_GenerateMatchups(benchmark::State& state) {
 BENCHMARK(BM_GenerateMatchups)->Unit(benchmark::kMillisecond);
 
 }  // namespace
-}  // namespace pushfold
+}  // namespace pushfold::headsup

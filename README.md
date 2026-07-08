@@ -10,9 +10,9 @@ All commands below are run from the repository root unless noted otherwise.
 | Path       | What it is                                                              |
 | ---------- | ---------------------------------------------------------------------- |
 | `liuran/`  | SvelteKit app (the website), built with Vite and `adapter-static`     |
-| `pushfold/`| Rust push-fold solver, compiled to WASM and consumed by the app       |
-| `lookups/` | C++ generator (`generate_pushfold_lookups`) that emits the solver's lookup tables as Rust source |
-| `scripts/` | Helper scripts (`build-pushfold.sh`)                                  |
+| `pushfold/`| Rust workspace for the push-fold solvers: `shared` (constants + generated tables) and `headsup` (the heads-up solver, compiled to WASM) |
+| `lookups/` | C++ generator (`generate_headsup_lookups`) that emits the solver's lookup tables as Rust source |
+| `scripts/` | Helper scripts (`build-headsup.sh`)                                  |
 
 ## Dependencies
 
@@ -58,9 +58,9 @@ Nx orchestrates the build as a three-stage dependency graph, each stage dependin
 on the previous one:
 
 1. **`lookups:generate-lookups`** — configures & builds the C++ generator, then
-   runs it to emit `pushfold/src/generated/{equity,matchup,hands}.rs`.
-2. **`pushfold:build-wasm`** — compiles the Rust solver to WASM and runs
-   `wasm-bindgen`, emitting JS bindings into `liuran/src/lib/pkg/`.
+   runs it to emit `pushfold/shared/src/generated/{headsup_equity,headsup_matchup,hands}.rs`.
+2. **`pushfold:build-headsup-wasm`** — compiles the heads-up Rust solver to WASM
+   and runs `wasm-bindgen`, emitting JS bindings into `liuran/src/lib/pkg/headsup/`.
 3. **`liuran:build`** — builds the SvelteKit app.
 
 Running the top-level build runs all three in order, caching unchanged stages.
@@ -99,14 +99,14 @@ Nx caching and the cmake/cargo incremental builds are separate layers:
 The WASM build can also be run directly without Nx:
 
 ```
-pnpm build:pushfold   # or: ./scripts/build-pushfold.sh
+pnpm build:pushfold   # or: ./scripts/build-headsup.sh
 ```
 
 which runs the equivalent of:
 
 ```
-cargo build --release --target=wasm32-unknown-unknown --manifest-path pushfold/Cargo.toml
-wasm-bindgen pushfold/target/wasm32-unknown-unknown/release/pushfold.wasm --out-dir liuran/src/lib/pkg
+cargo build --release --target=wasm32-unknown-unknown --manifest-path pushfold/Cargo.toml -p pushfold-headsup
+wasm-bindgen pushfold/target/wasm32-unknown-unknown/release/pushfold_headsup.wasm --out-dir liuran/src/lib/pkg/headsup
 ```
 
 Note this does **not** regenerate the lookup tables; use `pnpm build:wasm` (or the

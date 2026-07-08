@@ -110,13 +110,16 @@ TEST(RustFrontendTest, EmitsAttributeAbove2DStatic) {
 
 TEST(RustFrontendTest, EmitsModuleDeclaration) {
     const std::string output = Generate([](RustFrontend& fe) { fe.EmitModule("equity"); });
-    EXPECT_EQ(output, "pub mod equity;\n");
+    EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
+              "pub mod equity;\n");
 }
 
 TEST(RustFrontendTest, EmitsGatedModuleDeclaration) {
     const std::string output = Generate([](RustFrontend& fe) { fe.EmitModule("hands", "#[cfg(test)]"); });
     EXPECT_EQ(output,
               "#[cfg(test)]\n"
+              "#[rustfmt::skip]\n"
               "pub mod hands;\n");
 }
 
@@ -127,9 +130,12 @@ TEST(RustFrontendTest, EmitsModuleDeclarationsContiguously) {
         fe.EmitModule("matchup");
     });
     EXPECT_EQ(output,
+              "#[rustfmt::skip]\n"
               "pub mod equity;\n"
               "#[cfg(test)]\n"
+              "#[rustfmt::skip]\n"
               "pub mod hands;\n"
+              "#[rustfmt::skip]\n"
               "pub mod matchup;\n");
 }
 

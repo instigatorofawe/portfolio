@@ -5,9 +5,9 @@
 		"dev": "pnpm -C liuran dev",
 		"build": "nx build liuran",
 		"build:web": "pnpm -C liuran build",
-		"build:wasm": "nx build-wasm pushfold",
+		"build:wasm": "nx build-headsup-wasm pushfold",
 		"lookups": "nx generate-lookups lookups",
-		"clean:generated": "rm -rf pushfold/src/generated liuran/src/lib/generated liuran/src/lib/pkg",
+		"clean:generated": "rm -rf pushfold/shared/src/generated liuran/src/lib/generated liuran/src/lib/pkg",
 		"clean": "nx reset && pnpm clean:generated && rm -rf lookups/build pushfold/target liuran/.svelte-kit liuran/build",
 		"rebuild": "pnpm clean && pnpm build",
 		"ci:local": "pnpm build && pnpm check && pnpm lint && pnpm test:cpp && pnpm test:rust && pnpm -C liuran test:unit --run --passWithNoTests && pnpm test:e2e",
@@ -21,7 +21,7 @@
 		"test:unit": "pnpm -C liuran test:unit",
 		"test:e2e": "pnpm -C liuran test:e2e",
 		"install:liuran": "pnpm -C liuran install",
-		"build:pushfold": "./scripts/build-pushfold.sh"
+		"build:pushfold": "./scripts/build-headsup.sh"
 	},
 	"devDependencies": {
 		"nx": "^23.0.0"
