@@ -12,18 +12,18 @@ namespace {
 // Infoset index of a hand spelled the way kHands lays them out.
 constexpr size_t Infoset(size_t row, size_t col) { return row * kNumRanks + col; }
 
-TEST(MatchupsTest, DefaultConstructedIsNotReady) {
+TEST(HeadsupMatchupsTest, DefaultConstructedIsNotReady) {
     MatchupGenerator generator;
     EXPECT_FALSE(generator.Ready());
 }
 
-TEST(MatchupsTest, SolveMarksReady) {
+TEST(HeadsupMatchupsTest, SolveMarksReady) {
     MatchupGenerator generator;
     generator.Solve();
     EXPECT_TRUE(generator.Ready());
 }
 
-TEST(MatchupsTest, MatchupsIsSymmetric) {
+TEST(HeadsupMatchupsTest, MatchupsIsSymmetric) {
     MatchupGenerator generator;
     const auto& matchups = generator.Matchups();
     for (size_t i = 0; i < kNumInfosets; ++i) {
@@ -35,7 +35,7 @@ TEST(MatchupsTest, MatchupsIsSymmetric) {
 
 // Every 4-card combination contributes three splits, each crediting two ordered
 // deals, so the whole table sums to C(52, 4) * 3 * 2.
-TEST(MatchupsTest, TotalEqualsAllOrderedDeals) {
+TEST(HeadsupMatchupsTest, TotalEqualsAllOrderedDeals) {
     MatchupGenerator generator;
     const auto& matchups = generator.Matchups();
     uint64_t total = 0;
@@ -48,7 +48,7 @@ TEST(MatchupsTest, TotalEqualsAllOrderedDeals) {
 }
 
 // Two disjoint-rank offsuit hands: 12 combos each, no card conflicts -> 144.
-TEST(MatchupsTest, OffsuitVersusOffsuitDisjointRanks) {
+TEST(HeadsupMatchupsTest, OffsuitVersusOffsuitDisjointRanks) {
     MatchupGenerator generator;
     const auto& matchups = generator.Matchups();
     const size_t ako = Infoset(1, 0);  // offsuit, lower triangle
@@ -58,26 +58,26 @@ TEST(MatchupsTest, OffsuitVersusOffsuitDisjointRanks) {
 
 // Both players pocket aces: the four aces split into two hands three ways,
 // counted in both orders -> 6.
-TEST(MatchupsTest, PocketAcesMirror) {
+TEST(HeadsupMatchupsTest, PocketAcesMirror) {
     MatchupGenerator generator;
     const auto& matchups = generator.Matchups();
     const size_t aa = Infoset(0, 0);
     EXPECT_EQ(matchups[aa][aa], 6);
 }
 
-TEST(MatchupsTest, ConstructedFromTableIsReady) {
+TEST(HeadsupMatchupsTest, ConstructedFromTableIsReady) {
     std::array<std::array<uint8_t, kNumInfosets>, kNumInfosets> table{};
     MatchupGenerator generator(table);
     EXPECT_TRUE(generator.Ready());
 }
 
-TEST(MatchupsTest, FlattenHasEntryPerUpperTriangleCell) {
+TEST(HeadsupMatchupsTest, FlattenHasEntryPerUpperTriangleCell) {
     MatchupGenerator generator;
     const auto flat = generator.Flatten();
     EXPECT_EQ(flat.size(), kNumMatchupEntries);
 }
 
-TEST(MatchupsTest, FlattenUnflattenRoundTrip) {
+TEST(HeadsupMatchupsTest, FlattenUnflattenRoundTrip) {
     MatchupGenerator solved;
     const auto& original = solved.Matchups();
 
