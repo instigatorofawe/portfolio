@@ -1,9 +1,11 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <omp/EquityCalculator.h>
@@ -70,11 +72,21 @@ class EquityGenerator {
      * independent and writes to a distinct slot, so the loop runs in parallel.
      * Dynamic scheduling balances the uneven per-matchup cost (blocking and range
      * overlap change how many deals enumerate).
+     *
+     * @p progress, if set, is called periodically with (completed, total) matchup
+     * counts. It is invoked from a serialized section, so it needs no locking of
+     * its own; counts may arrive slightly out of order across threads.
      */
-    void Solve() {
+    void Solve(const std::function<void(size_t completed, size_t total)>& progress = {}) {
         if (solved_) {
             return;
         }
+
+        // Report progress every this many matchups: frequent enough for a live
+        // bar over a multi-minute solve, rare enough that the serialized callback
+        // is not a contention point.
+        constexpr size_t kProgressInterval = 2048;
+        std::atomic<size_t> completed = 0;
 
 #pragma omp parallel for schedule(dynamic)
         for (size_t index = 0; index < kNumMatchupEntries; ++index) {
@@ -100,18 +112,24 @@ class EquityGenerator {
             // start() returns false when no legal deal exists for the ranges (an
             // impossible matchup). Its frequency is zero, so leave the slot's
             // equities at their zero-initialized value and skip the calculation.
-            if (!eq.start(ranges, 0, 0, /*enumerateAll=*/true, /*stdevTarget=*/5e-5, /*callback=*/nullptr,
-                          /*updateInterval=*/0.2, /*threadCount=*/kThreadsPerMatchup)) {
-                continue;
+            if (eq.start(ranges, 0, 0, /*enumerateAll=*/true, /*stdevTarget=*/5e-5, /*callback=*/nullptr,
+                         /*updateInterval=*/0.2, /*threadCount=*/kThreadsPerMatchup)) {
+                eq.wait();
+                const omp::EquityCalculator::Results results = eq.getResults();
+                (*equities_)[index] = {
+                    static_cast<float>(results.equity[0]),
+                    static_cast<float>(results.equity[1]),
+                    static_cast<float>(results.equity[2]),
+                };
             }
-            eq.wait();
 
-            const omp::EquityCalculator::Results results = eq.getResults();
-            (*equities_)[index] = {
-                static_cast<float>(results.equity[0]),
-                static_cast<float>(results.equity[1]),
-                static_cast<float>(results.equity[2]),
-            };
+            // Count every matchup, solved or impossible, so the bar reaches 100%;
+            // force a report on the last one regardless of the interval.
+            const size_t done = completed.fetch_add(1) + 1;
+            if (progress && (done % kProgressInterval == 0 || done == kNumMatchupEntries)) {
+#pragma omp critical(threeway_equity_progress)
+                progress(done, kNumMatchupEntries);
+            }
         }
 
         solved_ = true;

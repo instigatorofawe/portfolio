@@ -80,6 +80,10 @@ add_executable(generate_headsup_lookups src/Headsup/generate.cpp)
 target_link_libraries(generate_headsup_lookups PRIVATE pushfold_lookups)
 target_compile_options(generate_headsup_lookups PRIVATE ${PUSHFOLD_WARNING_FLAGS})
 
+add_executable(generate_threeway_lookups src/Threeway/generate.cpp)
+target_link_libraries(generate_threeway_lookups PRIVATE pushfold_lookups)
+target_compile_options(generate_threeway_lookups PRIVATE ${PUSHFOLD_WARNING_FLAGS})
+
 # Only build tests when this project is the top-level build.
 if(PROJECT_IS_TOP_LEVEL)
     # --- GoogleTest ---
