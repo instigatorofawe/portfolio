@@ -4,7 +4,7 @@
 #include <limits>
 #include <memory>
 
-#include <pushfold/headsup/Equity.hpp>
+#include <pushfold/Headsup/Equity.hpp>
 
 #include "pushfold/Constants.hpp"
 
