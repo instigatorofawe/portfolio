@@ -12,17 +12,40 @@
 				"{projectRoot}/include/**/*"
 			],
 			"outputs": [
-				"{workspaceRoot}/pushfold/shared/src/generated/headsup_equity.rs",
-				"{workspaceRoot}/pushfold/shared/src/generated/headsup_matchup.rs",
-				"{workspaceRoot}/pushfold/shared/src/generated/hands.rs",
-				"{workspaceRoot}/pushfold/shared/src/generated/mod.rs"
+				"{workspaceRoot}/pushfold/shared/src/generated/headsup/headsup_equity.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/headsup/headsup_matchup.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/headsup/hands.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/headsup/mod.rs"
 			],
 			"options": {
 				"parallel": false,
 				"commands": [
 					"cmake -S lookups -B lookups/build",
 					"cmake --build lookups/build --target generate_headsup_lookups",
-					"lookups/build/generate_headsup_lookups pushfold/shared/src/generated rust"
+					"lookups/build/generate_headsup_lookups pushfold/shared/src/generated/headsup rust"
+				]
+			}
+		},
+		"generate-threeway-lookups": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/CMakeLists.txt",
+				"{projectRoot}/src/**/*",
+				"{projectRoot}/include/**/*"
+			],
+			"outputs": [
+				"{workspaceRoot}/pushfold/shared/src/generated/threeway/threeway_equity.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/threeway/threeway_matchup.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/threeway/hands.rs",
+				"{workspaceRoot}/pushfold/shared/src/generated/threeway/mod.rs"
+			],
+			"options": {
+				"parallel": false,
+				"commands": [
+					"cmake -S lookups -B lookups/build",
+					"cmake --build lookups/build --target generate_threeway_lookups",
+					"lookups/build/generate_threeway_lookups pushfold/shared/src/generated/threeway rust"
 				]
 			}
 		},

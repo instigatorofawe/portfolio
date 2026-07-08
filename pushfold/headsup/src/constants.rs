@@ -27,7 +27,7 @@ pub fn equities() -> DMatrix<f32> {
     for i in 0..N_INFOSETS {
         result[i * N_INFOSETS + i] = 0.5;
         for j in (i + 1)..N_INFOSETS {
-            let equity = generated::headsup_equity::EQUITIES[k] as f32 / u16::MAX as f32;
+            let equity = generated::headsup::headsup_equity::EQUITIES[k] as f32 / u16::MAX as f32;
             result[(i, j)] = equity;
             result[(j, i)] = 1.0 - equity;
             k += 1;
@@ -48,7 +48,7 @@ pub fn matchups() -> DMatrix<f32> {
     let mut k = 0; // running index into the flattened upper triangle (incl. diagonal)
     for i in 0..N_INFOSETS {
         for j in i..N_INFOSETS {
-            let count = generated::headsup_matchup::MATCHUPS[k] as f32;
+            let count = generated::headsup::headsup_matchup::MATCHUPS[k] as f32;
             result[(i, j)] = count;
             result[(j, i)] = count;
             k += 1;
