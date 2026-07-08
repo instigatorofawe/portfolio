@@ -1,0 +1,11 @@
+[package]
+name = "pushfold-shared"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+# Gates the generated `HANDS` label grid and `hands()`. It is reference data used
+# only for pretty-printing strategies in the solver crates' tests, so it stays out
+# of release (WASM) builds unless a dependent opts in via this feature. Consumers
+# enable it as a dev-dependency feature (see pushfold-headsup).
+hands = []

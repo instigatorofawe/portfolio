@@ -3,7 +3,7 @@
 	"name": "pushfold",
 	"projectType": "library",
 	"targets": {
-		"build-wasm": {
+		"build-headsup-wasm": {
 			"executor": "nx:run-commands",
 			"cache": true,
 			"dependsOn": [
@@ -12,12 +12,13 @@
 			"inputs": [
 				"{projectRoot}/Cargo.toml",
 				"{projectRoot}/Cargo.lock",
-				"{projectRoot}/src/**/*",
-				"{workspaceRoot}/scripts/build-pushfold.sh"
+				"{projectRoot}/shared/**/*",
+				"{projectRoot}/headsup/**/*",
+				"{workspaceRoot}/scripts/build-headsup.sh"
 			],
-			"outputs": ["{workspaceRoot}/liuran/src/lib/pkg"],
+			"outputs": ["{workspaceRoot}/liuran/src/lib/pkg/headsup"],
 			"options": {
-				"command": "./scripts/build-pushfold.sh"
+				"command": "./scripts/build-headsup.sh"
 			}
 		}
 	}

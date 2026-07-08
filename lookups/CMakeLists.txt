@@ -76,9 +76,9 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(pushfold_lookups INTERFACE OpenMP::OpenMP_CXX)
 endif()
 
-add_executable(generate_pushfold_lookups src/generate.cpp)
-target_link_libraries(generate_pushfold_lookups PRIVATE pushfold_lookups)
-target_compile_options(generate_pushfold_lookups PRIVATE ${PUSHFOLD_WARNING_FLAGS})
+add_executable(generate_headsup_lookups src/headsup/generate.cpp)
+target_link_libraries(generate_headsup_lookups PRIVATE pushfold_lookups)
+target_compile_options(generate_headsup_lookups PRIVATE ${PUSHFOLD_WARNING_FLAGS})
 
 # Only build tests when this project is the top-level build.
 if(PROJECT_IS_TOP_LEVEL)

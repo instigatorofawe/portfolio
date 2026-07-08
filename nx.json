@@ -11,7 +11,7 @@
     "generate-lookups": {
       "cache": true
     },
-    "build-wasm": {
+    "build-headsup-wasm": {
       "cache": true
     },
     "build": {

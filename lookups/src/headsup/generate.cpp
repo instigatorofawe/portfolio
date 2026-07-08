@@ -10,15 +10,16 @@
 #include <string_view>
 
 #include <pushfold/Constants.hpp>
-#include <pushfold/Equity.hpp>
 #include <pushfold/Frontends/CppFrontend.hpp>
 #include <pushfold/Frontends/RustFrontend.hpp>
 #include <pushfold/Frontends/TypeScriptFrontend.hpp>
-#include <pushfold/Matchups.hpp>
+#include <pushfold/headsup/Equity.hpp>
+#include <pushfold/headsup/Matchups.hpp>
 
 namespace {
 
 using namespace pushfold;
+using namespace pushfold::headsup;
 
 // Fixed-point type for the equity table. uint16_t keeps the round-trip error
 // under 1/2^16 (see EquityTest) while halving the table size against a float.
@@ -76,39 +77,43 @@ void Generate(const std::filesystem::path& dir, const Naming& naming, const Sele
         std::println("Solving equity table ({} matchups)...", kNumEquityMatchups);
         const auto equity = std::make_unique<EquityGenerator>();
         const std::array<EquityScalar, kNumEquityMatchups> equities = equity->Quantize<EquityScalar>();
-        WriteTable<Frontend>(dir / std::format("equity.{}", naming.extension), naming.equity, equities);
+        WriteTable<Frontend>(dir / std::format("headsup_equity.{}", naming.extension), naming.equity, equities);
     }
 
     if (selection.matchup) {
         std::println("Solving matchup table ({} entries)...", kNumMatchupEntries);
         const auto matchup = std::make_unique<MatchupGenerator>();
         const std::array<std::uint8_t, kNumMatchupEntries> matchups = matchup->Flatten();
-        WriteTable<Frontend>(dir / std::format("matchup.{}", naming.extension), naming.matchup, matchups);
+        WriteTable<Frontend>(dir / std::format("headsup_matchup.{}", naming.extension), naming.matchup, matchups);
     }
 
     // The hands table maps each infoset index to its label. It is fixed
     // reference data (not solved), and only the consumers' tests need it, so the
-    // Rust copy is gated behind #[cfg(test)] to keep it out of release builds.
+    // Rust copy is gated behind the `hands` cargo feature (which the solver crates
+    // enable only as a dev-dependency) to keep it out of release builds.
     if (selection.hands) {
-        WriteTable<Frontend>(dir / std::format("hands.{}", naming.extension), naming.hands, kHands, "#[cfg(test)]");
+        WriteTable<Frontend>(dir / std::format("hands.{}", naming.extension), naming.hands, kHands,
+                             "#[cfg(feature = \"hands\")]");
     }
 
     // Rust groups the generated files under a directory module, which needs a
     // mod.rs declaring each table file as a submodule. The other frontends pull
     // the files in directly (C++ via #include, TypeScript via module path), so
-    // they need no equivalent. The module names are the file stems ("equity",
-    // "matchup", "hands"); the hands table is test-only, so its module is gated
+    // they need no equivalent. The module names are the file stems
+    // ("headsup_equity", "headsup_matchup", "hands"); the heads-up tables are
+    // prefixed so three-way tables can share this module without colliding, and
+    // the hands table is behind the `hands` cargo feature, so its module is gated
     // to match.
     if constexpr (std::same_as<Frontend, RustFrontend>) {
         RustFrontend mod((dir / "mod.rs").string());
         if (selection.equity) {
-            mod.EmitModule("equity");
+            mod.EmitModule("headsup_equity");
         }
         if (selection.hands) {
-            mod.EmitModule("hands", "#[cfg(test)]");
+            mod.EmitModule("hands", "#[cfg(feature = \"hands\")]");
         }
         if (selection.matchup) {
-            mod.EmitModule("matchup");
+            mod.EmitModule("headsup_matchup");
         }
         std::println("  wrote {}", (dir / "mod.rs").string());
     }

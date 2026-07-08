@@ -2,11 +2,11 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 
-#include <pushfold/Matchups.hpp>
+#include <pushfold/headsup/Matchups.hpp>
 
 #include "pushfold/Constants.hpp"
 
-namespace pushfold {
+namespace pushfold::headsup {
 namespace {
 
 // Infoset index of a hand spelled the way kHands lays them out.
@@ -93,4 +93,4 @@ TEST(MatchupsTest, FlattenUnflattenRoundTrip) {
 }
 
 }  // namespace
-}  // namespace pushfold
+}  // namespace pushfold::headsup

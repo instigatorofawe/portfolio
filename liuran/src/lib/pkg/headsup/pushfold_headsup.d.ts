@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export class PushFoldSolver {
+export class HeadsUpSolver {
     free(): void;
     [Symbol.dispose](): void;
     constructor();

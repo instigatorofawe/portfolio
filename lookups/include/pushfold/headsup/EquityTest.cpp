@@ -4,11 +4,11 @@
 #include <limits>
 #include <memory>
 
-#include <pushfold/Equity.hpp>
+#include <pushfold/headsup/Equity.hpp>
 
 #include "pushfold/Constants.hpp"
 
-namespace pushfold {
+namespace pushfold::headsup {
 namespace {
 
 using EquityTable = std::array<std::array<float, kNumInfosets>, kNumInfosets>;
@@ -79,4 +79,4 @@ TEST(EquityTest, QuantizeRoundTripUint8) { ExpectRoundTrip<std::uint8_t>(); }
 
 TEST(EquityTest, QuantizeRoundTripUint16) { ExpectRoundTrip<std::uint16_t>(); }
 
-}  // namespace pushfold
+}  // namespace pushfold::headsup
