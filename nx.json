@@ -14,6 +14,9 @@
     "build-headsup-wasm": {
       "cache": true
     },
+    "build-threeway-wasm": {
+      "cache": true
+    },
     "build": {
       "cache": true
     }

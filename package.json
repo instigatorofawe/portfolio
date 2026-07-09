@@ -6,6 +6,7 @@
 		"build": "nx build liuran",
 		"build:web": "pnpm -C liuran build",
 		"build:wasm": "nx build-headsup-wasm pushfold",
+		"build:wasm:threeway": "nx build-threeway-wasm pushfold",
 		"lookups": "nx generate-lookups lookups",
 		"lookups:threeway": "nx generate-threeway-lookups lookups",
 		"clean:generated": "rm -rf pushfold/shared/src/generated/headsup pushfold/shared/src/generated/threeway liuran/src/lib/generated liuran/src/lib/pkg",

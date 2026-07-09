@@ -1,0 +1,58 @@
+/* tslint:disable */
+/* eslint-disable */
+
+/**
+ * Input validation errors
+ */
+export enum SolverError {
+    NonFiniteInput = 0,
+    StackNotPositive = 1,
+    NegativeBlindOrAnte = 2,
+    SmallBlindExceedsStack = 3,
+    BigBlindExceedsStack = 4,
+    ZeroIterations = 5,
+}
+
+/**
+ * Solver result: the six averaged strategies, one per decision point.
+ */
+export class Strategies {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    readonly exploitability: number;
+    readonly bb_call_both: Float32Array;
+    readonly bb_call_bu: Float32Array;
+    readonly bb_call_sb: Float32Array;
+    readonly bu_push: Float32Array;
+    readonly sb_call: Float32Array;
+    readonly sb_push: Float32Array;
+}
+
+/**
+ * Three-handed push/fold solver.
+ *
+ * The game: the button open-pushes or folds; the small blind reacts (call a
+ * push, or open-push once the button folds); the big blind closes the action
+ * at one of three histories. Two-player showdowns and the side pot of a
+ * three-way all-in are priced with the heads-up equity table (the third
+ * player's card removal is ignored); a three-way all-in's main pot uses the
+ * generated three-way pot shares.
+ *
+ * Runs CFR+ exactly like the heads-up solver — clamped regrets, alternating
+ * updates (BU, then SB, then BB, each against the freshest strategies),
+ * linear averaging. With three players CFR carries no convergence guarantee
+ * to a Nash equilibrium, so `solve` reports NashConv (the summed
+ * best-response gaps) as `exploitability`: a small value still certifies the
+ * profile is hard to exploit.
+ */
+export class ThreewaySolver {
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor();
+    /**
+     * Runs CFR+ (regret clamping, alternating updates, linear averaging)
+     * and returns the averaged strategies with their NashConv gap.
+     */
+    solve(stack_bu: number, stack_sb: number, stack_bb: number, sb: number, ante: number, iterations: number): Strategies;
+}
