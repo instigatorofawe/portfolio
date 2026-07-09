@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { HANDS } from '$lib/generated/hands';
-	import { computeFrequencies } from '$lib/pushfold/headsup/frequencies';
+	import { computeFrequencies } from '$lib/pushfold/frequencies';
 	import '$lib/styles/pushfold.css';
 
 	type SolverModule = typeof import('$lib/pkg/headsup/pushfold_headsup');

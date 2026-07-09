@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { combosAt, computeFrequencies, N_HANDS, TOTAL_COMBOS, GRID_SIZE } from './frequencies';
+import {
+	combosAt,
+	computeFrequencies,
+	computeFrequency,
+	N_HANDS,
+	TOTAL_COMBOS,
+	GRID_SIZE
+} from './frequencies';
 
 describe('combosAt', () => {
 	it('returns 6 combos for pairs (diagonal)', () => {
@@ -25,6 +32,23 @@ describe('combosAt', () => {
 			}
 		}
 		expect(total).toBe(TOTAL_COMBOS);
+	});
+});
+
+describe('computeFrequency', () => {
+	it('reports zero when nothing is played', () => {
+		expect(computeFrequency(Array(N_HANDS).fill(0))).toBe(0);
+	});
+
+	it('reports one when every hand is played', () => {
+		expect(computeFrequency(Array(N_HANDS).fill(1))).toBeCloseTo(1, 10);
+	});
+
+	it('weights a single hand by its combo count', () => {
+		// Hand index 0 (a pair = 6 combos) is the only one played.
+		const strategy = Array(N_HANDS).fill(0);
+		strategy[0] = 1;
+		expect(computeFrequency(strategy)).toBeCloseTo(6 / TOTAL_COMBOS, 10);
 	});
 });
 

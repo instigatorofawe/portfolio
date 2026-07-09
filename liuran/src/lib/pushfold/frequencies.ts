@@ -1,7 +1,7 @@
-// Aggregate per-hand push/fold (BU) and call/fold (BB) frequencies from a
-// solver strategy. The solver returns two parallel arrays of 169 entries — the
-// button's push frequency and the big blind's call frequency — each indexed by
-// position in the 13x13 hand grid.
+// Aggregate per-hand solver strategies into overall action frequencies.
+// Every push/fold solver (heads-up, three-way) returns 169-entry arrays
+// indexed by position in the 13x13 hand grid; this module weights those
+// arrays into a single frequency shared by every solver UI.
 //
 // Each grid cell maps to a different number of concrete two-card combos: pairs
 // (the diagonal) have 6, suited hands (upper triangle) have 4, and offsuit
@@ -17,6 +17,19 @@ export function combosAt(i: number, j: number): number {
 	if (i === j) return 6; // pair
 	if (i < j) return 4; // suited
 	return 12; // offsuit
+}
+
+/**
+ * Collapse a single 169-entry solver strategy into an overall action
+ * frequency, expressed as a fraction in [0, 1].
+ */
+export function computeFrequency(strategy: ArrayLike<number>): number {
+	let total = 0;
+	for (let index = 0; index < N_HANDS; index++) {
+		const combos = combosAt(Math.floor(index / GRID_SIZE), index % GRID_SIZE);
+		total += (strategy[index] * combos) / TOTAL_COMBOS;
+	}
+	return total;
 }
 
 export type Frequencies = {
@@ -39,14 +52,7 @@ export function computeFrequencies(
 	buPush: ArrayLike<number>,
 	bbCall: ArrayLike<number>
 ): Frequencies {
-	let push = 0;
-	let call = 0;
-
-	for (let index = 0; index < N_HANDS; index++) {
-		const combos = combosAt(Math.floor(index / GRID_SIZE), index % GRID_SIZE);
-		push += (buPush[index] * combos) / TOTAL_COMBOS;
-		call += (bbCall[index] * combos) / TOTAL_COMBOS;
-	}
-
+	const push = computeFrequency(buPush);
+	const call = computeFrequency(bbCall);
 	return { push, buFold: 1 - push, call, bbFold: 1 - call };
 }
