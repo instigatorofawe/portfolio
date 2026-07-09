@@ -2,6 +2,17 @@
 resolver = "3"
 members = ["shared", "headsup", "threeway"]
 
+# Single source of truth for versions shared across crates; member manifests
+# pull these in with `{ workspace = true }` instead of repeating version
+# numbers, so bumping e.g. wasm-bindgen only happens in one place.
+[workspace.dependencies]
+pushfold-shared = { path = "shared" }
+wasm-bindgen = "0.2.125"
+js-sys = "0.3"
+nalgebra = "0.35.0"
+ndarray = "0.16.1"
+criterion = "0.8.2"
+
 # Profiles apply workspace-wide and are only honored in the root manifest.
 [profile.release]
 lto = true

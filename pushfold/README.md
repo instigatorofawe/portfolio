@@ -16,6 +16,12 @@ file covers only what's specific to this package.
 All three tables in `shared::generated` are produced by the `lookups` C++
 generator and are not hand-written — see [`../lookups/README.md`](../lookups/README.md).
 
+Versions for dependencies shared across crates (`wasm-bindgen`, `js-sys`,
+`nalgebra`, `ndarray`, `criterion`, and the internal `pushfold-shared` path
+dependency) are pinned once in the workspace root's `[workspace.dependencies]`
+and inherited by each crate via `{ workspace = true }`, so bumping one only
+means editing `Cargo.toml` at the workspace root.
+
 ## Building
 
 The WASM builds depend on the generated lookup tables existing in
@@ -52,6 +58,13 @@ which is unusably slow at the default debug optimization level.
 
 ```
 cargo bench --manifest-path pushfold/Cargo.toml -p pushfold-headsup
+cargo bench --manifest-path pushfold/Cargo.toml -p pushfold-threeway
 ```
 
-(`headsup/benches/solver.rs`, via Criterion.)
+Both use Criterion (`headsup/benches/solver.rs`, `threeway/benches/solver.rs`):
+a `new` benchmark for solver construction, and a `solve` group across a few
+iteration counts. The three-way group runs far fewer iterations at a smaller
+sample size (`group.sample_size(10)`) than heads-up's — each three-way CFR+
+iteration is an O(N^3) tensor contraction versus heads-up's O(N^2), so
+matching heads-up's iteration counts would make a full `cargo bench` run
+impractically slow.
