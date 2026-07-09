@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { HANDS } from '$lib/generated/hands';
 	import { computeFrequency } from '$lib/pushfold/frequencies';
+	import StrategyGrid from '$lib/components/StrategyGrid.svelte';
 	import '$lib/styles/threeway.css';
 
 	const N_ITER = 1000;
@@ -291,30 +291,7 @@
 				</ul>
 			</nav>
 
-			<div>
-				{#each [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as rowIndex (rowIndex)}
-					<div class="row">
-						{#each [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as colIndex (colIndex)}
-							<div class="cell">
-								<div
-									class="strategy-indicator"
-									style="--fill: {selectedStrategy[rowIndex * 13 + colIndex]};"
-								>
-									{#if DECISIONS[selected].action === 'push'}
-										<div class="bet"></div>
-									{:else}
-										<div class="call"></div>
-									{/if}
-									<div class="fold"></div>
-								</div>
-								<div class="cell-label">
-									{HANDS[rowIndex][colIndex]}
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/each}
-			</div>
+			<StrategyGrid strategy={selectedStrategy} action={DECISIONS[selected].action} />
 		</div>
 	{:else}
 		<div class="loading">Loading solver…</div>
