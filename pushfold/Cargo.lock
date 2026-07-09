@@ -477,6 +477,14 @@ name = "pushfold-shared"
 version = "0.1.0"
 
 [[package]]
+name = "pushfold-threeway"
+version = "0.1.0"
+dependencies = [
+ "pushfold-shared",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
