@@ -86,6 +86,20 @@
 	flex-direction: row;
 }
 
+/* A solve triggered by a param change is debounced and runs in a worker; the
+   previous grid stays on screen (dimmed) instead of blanking out until the
+   fresher one lands. */
+.threeway .wrapper.solving {
+	opacity: 0.6;
+	transition: opacity 0.15s;
+}
+
+.threeway .solving-indicator {
+	margin-left: var(--space-2);
+	color: var(--muted);
+	font-size: var(--text-sm);
+}
+
 .threeway .row {
 	display: flex;
 }

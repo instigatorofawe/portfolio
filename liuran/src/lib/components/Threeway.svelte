@@ -3,29 +3,10 @@
 	import { computeFrequency } from '$lib/pushfold/frequencies';
 	import '$lib/styles/threeway.css';
 
-	type SolverModule = typeof import('$lib/pkg/threeway/pushfold_threeway');
-	type Solver = InstanceType<SolverModule['ThreewaySolver']>;
-
 	const N_ITER = 1000;
-
-	// Same loading pattern as PushFold.svelte: the solver is backed by a WASM
-	// module that instantiates asynchronously, so it's loaded through a
-	// dynamic import to keep this component out of the static module graph
-	// and out of prerendering. The solver builds its lookup tables once on
-	// construction, so we keep a single instance and reuse it per solve.
-	let solver = $state<Solver | null>(null);
-
-	$effect(() => {
-		let instance: Solver | null = null;
-		import('$lib/pkg/threeway/pushfold_threeway').then((m) => {
-			instance = new m.ThreewaySolver();
-			solver = instance;
-		});
-		return () => {
-			instance?.free();
-			solver = null;
-		};
-	});
+	// Solves settle within a few hundred ms of the last edit rather than
+	// firing on every keystroke.
+	const DEBOUNCE_MS = 300;
 
 	let stackBu = $state(5.0);
 	let stackSb = $state(5.0);
@@ -58,30 +39,66 @@
 		exploitability: number;
 	};
 
-	let solution = $derived.by<Solution | null>(() => {
-		if (!solver || validationError) return null;
-		try {
-			// The returned Strategies is a WASM object whose getters copy on each
-			// access; read each field once into a plain JS value, then free the
-			// object so its WASM memory isn't held until GC.
-			const result = solver.solve(stackBu, stackSb, stackBb, sb, ante, N_ITER);
-			const solution = {
-				buPush: result.bu_push,
-				sbCall: result.sb_call,
-				sbPush: result.sb_push,
-				bbCallBoth: result.bb_call_both,
-				bbCallBu: result.bb_call_bu,
-				bbCallSb: result.bb_call_sb,
-				exploitability: result.exploitability
-			};
-			result.free();
-			return solution;
-		} catch (e) {
-			// The Rust layer rejected something the UI check missed; degrade
-			// gracefully rather than crash the component.
-			console.error('solver rejected inputs', e);
-			return null;
-		}
+	// Three-way CFR+ is heavy enough (O(N^3) per iteration, 1000 iterations)
+	// to freeze the page for several seconds if solved inline; it runs in a
+	// dedicated worker instead, so the main thread stays responsive while it
+	// churns. `solution` holds the last completed solve and is left in place
+	// while a newer one is in flight, so the grid doesn't blank out on every
+	// keystroke — only `solving` flips to show that a fresher answer is on
+	// the way.
+	let solution = $state<Solution | null>(null);
+	let solving = $state(false);
+	let solveError = $state<string | null>(null);
+
+	let worker: Worker | null = null;
+	// Bumped per dispatched request so a response can be checked against it;
+	// responses to superseded requests (a fresher edit already went out) are
+	// dropped instead of clobbering newer results.
+	let latestRequestId = 0;
+
+	$effect(() => {
+		const w = new Worker(new URL('../workers/threeway.worker.ts', import.meta.url), {
+			type: 'module'
+		});
+		w.onmessage = (event: MessageEvent<import('$lib/workers/threeway.worker').SolveResponse>) => {
+			const data = event.data;
+			if (data.id !== latestRequestId) return;
+			solving = false;
+			if (data.ok) {
+				solution = {
+					buPush: data.buPush,
+					sbCall: data.sbCall,
+					sbPush: data.sbPush,
+					bbCallBoth: data.bbCallBoth,
+					bbCallBu: data.bbCallBu,
+					bbCallSb: data.bbCallSb,
+					exploitability: data.exploitability
+				};
+				solveError = null;
+			} else {
+				// The Rust layer rejected something the UI check missed;
+				// degrade gracefully rather than leave `solving` stuck.
+				console.error('solver rejected inputs', data.error);
+				solveError = data.error;
+			}
+		};
+		worker = w;
+		return () => {
+			w.terminate();
+			worker = null;
+		};
+	});
+
+	$effect(() => {
+		const params = { stackBu, stackSb, stackBb, sb, ante };
+		if (validationError) return;
+		const timer = setTimeout(() => {
+			if (!worker) return;
+			const id = ++latestRequestId;
+			solving = true;
+			worker.postMessage({ id, ...params, iterations: N_ITER });
+		}, DEBOUNCE_MS);
+		return () => clearTimeout(timer);
 	});
 
 	type DecisionKey = 'bu' | 'sbCall' | 'sbPush' | 'bbBoth' | 'bbBu' | 'bbSb';
@@ -188,13 +205,18 @@
 		</div>
 		<div class="configs">
 			<button onclick={() => reset()}>Default</button>
+			{#if solving}
+				<span class="solving-indicator">Solving…</span>
+			{:else if solveError}
+				<span class="solving-indicator" role="alert">{solveError}</span>
+			{/if}
 		</div>
 	</div>
 
 	{#if validationError}
 		<div class="loading" role="alert">{validationError}</div>
 	{:else if solution && selectedStrategy}
-		<div class="wrapper">
+		<div class="wrapper" class:solving>
 			<nav class="tree">
 				<ul>
 					<li>
