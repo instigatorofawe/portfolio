@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { computeFrequencies } from '$lib/pushfold/frequencies';
+	import { formatPct, formatExploitability } from '$lib/pushfold/format';
 	import StrategyGrid from '$lib/components/StrategyGrid.svelte';
 	import '$lib/styles/pushfold.css';
+	import '$lib/styles/headsup.css';
 
 	type SolverModule = typeof import('$lib/pkg/headsup/pushfold_headsup');
 	type Solver = InstanceType<SolverModule['HeadsUpSolver']>;
@@ -81,9 +83,6 @@
 	let frequencies = $derived.by(() => {
 		if (!solution) return null;
 		const { push, buFold, call, bbFold } = computeFrequencies(solution.buPush, solution.bbCall);
-		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 });
-		// Percentages below 0.01% are visual noise; clamp them to a flat 0.000%.
-		const formatPct = (value: number) => (value < 0.01 ? '0.000' : formatter.format(value));
 		return [
 			formatPct(push * 100),
 			formatPct(buFold * 100),
@@ -92,15 +91,9 @@
 		];
 	});
 
-	// Exploitability is the Nash gap in BB per deal; scale to the standard
-	// BB/100 (big blinds won per 100 hands) win-rate unit poker players read.
-	let exploitability = $derived.by(() => {
-		if (!solution) return null;
-		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
-		const value = solution.exploitability * 100;
-		// Below 0.000001 bb/100 the number is effectively zero; show a flat value.
-		return value < 0.000001 ? '0.000000' : formatter.format(value);
-	});
+	let exploitability = $derived.by(() =>
+		solution ? formatExploitability(solution.exploitability) : null
+	);
 
 	function reset() {
 		stack = 5.0;
@@ -113,7 +106,7 @@
 	}
 </script>
 
-<div class="pushfold">
+<div class="pushfold headsup">
 	<div class="controls">
 		<div class="configs-wrapper configs-inputs">
 			<div class="configs input-container">

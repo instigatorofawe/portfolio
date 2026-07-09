@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { computeFrequency } from '$lib/pushfold/frequencies';
+	import { formatPct, formatExploitability } from '$lib/pushfold/format';
 	import StrategyGrid from '$lib/components/StrategyGrid.svelte';
+	import '$lib/styles/pushfold.css';
 	import '$lib/styles/threeway.css';
 
 	const N_ITER = 1000;
@@ -168,22 +170,13 @@
 
 	let frequency = $derived.by(() => {
 		if (!selectedStrategy) return null;
-		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 4 });
-		// Percentages below 0.01% are visual noise; clamp them to a flat 0.000%.
-		const formatPct = (value: number) => (value < 0.01 ? '0.000' : formatter.format(value));
 		const act = computeFrequency(selectedStrategy) * 100;
 		return { act: formatPct(act), fold: formatPct(100 - act) };
 	});
 
-	// Exploitability is the NashConv gap in BB per deal; scale to the standard
-	// BB/100 (big blinds won per 100 hands) win-rate unit poker players read.
-	let exploitability = $derived.by(() => {
-		if (!solution) return null;
-		const formatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
-		const value = solution.exploitability * 100;
-		// Below 0.000001 bb/100 the number is effectively zero; show a flat value.
-		return value < 0.000001 ? '0.000000' : formatter.format(value);
-	});
+	let exploitability = $derived.by(() =>
+		solution ? formatExploitability(solution.exploitability) : null
+	);
 
 	function reset() {
 		stackBu = 5.0;
@@ -209,7 +202,7 @@
 	</button>
 {/snippet}
 
-<div class="threeway">
+<div class="pushfold threeway">
 	<div class="controls">
 		<div class="configs-wrapper configs-inputs">
 			<div class="configs input-container">
