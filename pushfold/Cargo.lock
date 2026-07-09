@@ -510,6 +510,7 @@ version = "0.1.0"
 name = "pushfold-threeway"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "js-sys",
  "ndarray",
  "pushfold-shared",

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { HANDS } from '$lib/generated/hands';
 	import { computeFrequencies } from '$lib/pushfold/frequencies';
+	import StrategyGrid from '$lib/components/StrategyGrid.svelte';
 	import '$lib/styles/pushfold.css';
 
 	type SolverModule = typeof import('$lib/pkg/headsup/pushfold_headsup');
@@ -165,32 +165,10 @@
 				</div>
 			</div>
 
-			<div>
-				{#each [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as rowIndex (rowIndex)}
-					<div class="row">
-						{#each [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as colIndex (colIndex)}
-							<div class="cell">
-								<div
-									class="strategy-indicator"
-									style="--fill: {selected == 'bu'
-										? solution.buPush[rowIndex * 13 + colIndex]
-										: solution.bbCall[rowIndex * 13 + colIndex]};"
-								>
-									{#if selected == 'bu'}
-										<div class="bet"></div>
-									{:else}
-										<div class="call"></div>
-									{/if}
-									<div class="fold"></div>
-								</div>
-								<div class="cell-label">
-									{HANDS[rowIndex][colIndex]}
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/each}
-			</div>
+			<StrategyGrid
+				strategy={selected == 'bu' ? solution.buPush : solution.bbCall}
+				action={selected == 'bu' ? 'push' : 'call'}
+			/>
 		</div>
 	{:else}
 		<div class="loading">Loading solver…</div>
