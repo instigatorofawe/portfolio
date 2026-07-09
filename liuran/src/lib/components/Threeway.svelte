@@ -130,9 +130,19 @@
 		return () => worker?.terminate();
 	});
 
+	// Whether the first solve has been dispatched. The initial solve fires
+	// immediately so the grid appears without delay; only later edits are
+	// debounced, so rapid typing doesn't spin up a fresh worker per keystroke.
+	let hasSolved = false;
+
 	$effect(() => {
 		const params = { stackBu, stackSb, stackBb, sb, ante };
 		if (validationError) return;
+		if (!hasSolved) {
+			hasSolved = true;
+			dispatchSolve(params);
+			return;
+		}
 		const timer = setTimeout(() => dispatchSolve(params), DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	});
@@ -235,7 +245,7 @@
 			{#if solving}
 				<span class="solving-indicator">Solving… {Math.round(solveProgress * 100)}%</span>
 			{:else if solveError}
-				<span class="solving-indicator" role="alert">{solveError}</span>
+				<span class="solve-error" role="alert">{solveError}</span>
 			{/if}
 		</div>
 	</div>

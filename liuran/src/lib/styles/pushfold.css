@@ -147,6 +147,13 @@
 	font-size: var(--text-base);
 }
 
+/* Rejected-solve message shown beside the controls; shared by both solvers. */
+.pushfold .solve-error {
+	margin-left: var(--space-2);
+	color: var(--muted);
+	font-size: var(--text-sm);
+}
+
 .pushfold .push-summary,
 .pushfold .call-summary,
 .pushfold .fold-summary,
