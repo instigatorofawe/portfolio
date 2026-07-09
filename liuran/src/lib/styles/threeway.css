@@ -1,89 +1,24 @@
-/* Styles for the three-way solver visualization (Threeway.svelte).
+/* Three-way-specific styles for the solver (Threeway.svelte).
  *
- * Imported as a plain stylesheet (so it lives outside Svelte's scoped <style>),
- * everything is namespaced under .threeway to keep the deliberately generic
- * class names (cell, row, fold, node…) from leaking into the global sheet.
- *
- * Shares the grid/bar mechanics with pushfold.css: cell geometry is driven by
- * custom properties so the layout responds to the breakpoint purely in CSS,
- * and each strategy bar reads its fill fraction (0–1) from an inline --fill
- * on its container.
+ * Layered on top of the shared pushfold.css: the component carries both the
+ * `.pushfold` (shared) and `.threeway` (this file) root classes. Everything
+ * here is unique to the three-way UI — the action tree that sits left of the
+ * grid, the dimmed "solving" state, and the cell-size formula that accounts
+ * for the tree's width.
  */
 
 .threeway {
-	/* Local viz palette, following the token convention in tokens.css. */
-	--push: rgb(233, 150, 122); /* salmon — push */
-	--call: rgb(143, 188, 139); /* green — call */
-	--fold-color: rgb(109, 162, 192); /* blue — fold */
-	--surface: #efefef; /* control / tree-node surface */
-	--surface-hover: #dfdfdf;
-	--grid-line: var(--ink);
-
 	/* Cell geometry scales fluidly with the viewport instead of snapping at a
 	   breakpoint: the 13-column grid grows to fill the width left after the
 	   action tree and the page's 1rem side padding, but is capped at 51px per
-	   cell and never shrinks below 21px. Bar height/width derive from the cell
-	   so proportions hold at every size. --cell-height is the span a
-	   fully-played (fill = 1) bar fills. */
+	   cell and never shrinks below 21px. */
 	--nav-width: 240px;
 	--cell-size: clamp(21px, calc((100vw - var(--nav-width) - 2 * var(--space-4)) / 13), 51px);
-	--cell-height: calc(var(--cell-size) - 1px);
-	--bar-width: calc(var(--cell-size) - 2px);
-
-	font-family: var(--font-sans);
 }
 
-/* Controls -------------------------------------------------------------- */
-
-.threeway .controls {
-	display: flex;
-}
-
-.threeway .configs {
-	display: flex;
-	place-items: center;
-	font-size: var(--text-base);
-	margin: auto;
-}
-
+/* The config row can grow to five inputs, so let it wrap. */
 .threeway .configs-wrapper {
-	display: flex;
-	flex-direction: row;
 	flex-wrap: wrap;
-	margin: var(--space-4) 0;
-	place-items: center;
-}
-
-.threeway .configs-inputs {
-	margin: var(--space-4) auto;
-}
-
-.threeway .config-input {
-	margin: var(--space-1);
-	width: 55px;
-}
-
-.threeway button {
-	border-radius: var(--space-2);
-	border: 1px solid transparent;
-	padding: 0.6em 1.2em;
-	margin: var(--space-1);
-	font-size: var(--text-base);
-	font-weight: 500;
-	font-family: inherit;
-	cursor: pointer;
-	transition: border-color 0.2s;
-}
-
-.threeway .controls button:hover {
-	background-color: var(--surface-hover);
-}
-
-/* Grid ------------------------------------------------------------------ */
-
-.threeway .wrapper {
-	display: flex;
-	flex-direction: row;
 }
 
 /* A solve triggered by a param change is debounced and runs in a worker; the
@@ -98,54 +33,6 @@
 	margin-left: var(--space-2);
 	color: var(--muted);
 	font-size: var(--text-sm);
-}
-
-.threeway .row {
-	display: flex;
-}
-
-.threeway .cell {
-	width: var(--cell-size);
-	height: var(--cell-size);
-	border: 1px solid var(--grid-line);
-	margin-right: -1px;
-	margin-bottom: -1px;
-	display: flex;
-	/* Label tracks the cell size (≈16px at the 51px cap), floored for legibility. */
-	font-size: max(8px, calc(var(--cell-size) * 0.31));
-	position: relative;
-}
-
-.threeway .cell:hover {
-	cursor: pointer;
-	background-color: var(--hairline);
-}
-
-.threeway .cell-label {
-	margin: auto;
-}
-
-/* Strategy bars: heights resolve from the --fill fraction set on the
-   container, so no pixel height is computed in JS. */
-.threeway .strategy-indicator {
-	position: absolute;
-}
-
-.threeway .bet,
-.threeway .call,
-.threeway .fold {
-	position: relative;
-	width: var(--bar-width);
-	z-index: -1;
-}
-
-.threeway .bet,
-.threeway .call {
-	height: calc(var(--cell-height) * var(--fill, 0));
-}
-
-.threeway .fold {
-	height: calc(var(--cell-height) * (1 - var(--fill, 0)));
 }
 
 /* Action tree ------------------------------------------------------------ */
@@ -199,6 +86,7 @@
 	background-color: var(--surface-hover);
 }
 
+/* Node accent maps onto the shared palette (see pushfold.css). */
 .threeway .node-push {
 	border-left-color: var(--push);
 }
@@ -212,70 +100,10 @@
 	font-weight: 600;
 }
 
-/* Loading + summaries --------------------------------------------------- */
-
-.threeway .loading {
-	display: flex;
-	place-items: center;
-	justify-content: center;
-	/* Reserve the full grid height so the layout doesn't jump when it loads. */
-	min-height: calc(13 * var(--cell-size) - 12px);
-	color: var(--muted);
-	font-size: var(--text-base);
-}
-
-.threeway .push-summary,
-.threeway .call-summary,
-.threeway .fold-summary,
-.threeway .exploitability-summary {
-	padding: var(--space-1) var(--space-2);
-	border-radius: var(--space-1);
-	margin: var(--space-1);
-}
-
-/* Neutral chip: exploitability is a diagnostic, not a push/call/fold action. */
-.threeway .exploitability-summary {
-	background-color: var(--surface-hover);
-	color: var(--muted);
-}
-
-/* Semantic colors shared by tree nodes, bars, and summaries. */
-.threeway .bet,
-.threeway .push-summary {
-	background-color: var(--push);
-}
-
-.threeway .call,
-.threeway .call-summary {
-	background-color: var(--call);
-}
-
-.threeway .fold-summary,
-.threeway .fold {
-	background-color: var(--fold-color);
-}
-
-/* The grid itself scales fluidly (see --cell-size above); below the
-   breakpoint the tree moves above the grid instead of beside it, so the
-   cell-size calc drops the nav-width term entirely. */
+/* Below the breakpoint the tree moves above the grid instead of beside it, so
+   the cell-size calc drops the nav-width term entirely. (The controls reflow
+   is handled by the shared pushfold.css breakpoint.) */
 @media only screen and (max-width: 1024px) {
-	.threeway button {
-		font-size: var(--text-sm);
-	}
-
-	.threeway .configs {
-		font-size: var(--text-sm);
-	}
-
-	.threeway .configs-wrapper {
-		flex-direction: column;
-	}
-
-	.threeway .input-container {
-		margin: 0;
-		align-self: end;
-	}
-
 	.threeway {
 		--cell-size: clamp(21px, calc((100vw - 2 * var(--space-4)) / 13), 51px);
 	}

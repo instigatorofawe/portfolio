@@ -1,8 +1,15 @@
-/* Styles for the push/fold solver visualization (PushFold.svelte).
+/* Shared base styles for the push/fold solver visualizations.
+ *
+ * Both solver UIs (headsup.css, threeway.css) apply the `.pushfold` root class
+ * alongside their own variant class, so everything here — the viz palette, the
+ * 13x13 grid, the strategy bars, the controls, and the summary chips — is
+ * shared between them. Each variant file supplies only what differs: the
+ * `--cell-size` formula (which depends on what sits beside the grid) and the
+ * navigation UI unique to that solver.
  *
  * Imported as a plain stylesheet (so it lives outside Svelte's scoped <style>),
  * everything is namespaced under .pushfold to keep the deliberately generic
- * class names (cell, row, fold, selector…) from leaking into the global sheet.
+ * class names (cell, row, fold…) from leaking into the global sheet.
  *
  * Cell geometry is driven by custom properties so the layout responds to the
  * breakpoint purely in CSS — no JS width tracking. Each strategy bar reads its
@@ -12,20 +19,16 @@
 
 .pushfold {
 	/* Local viz palette, following the token convention in tokens.css. */
-	--push: rgb(233, 150, 122); /* salmon — button push */
-	--call: rgb(143, 188, 139); /* green — big-blind call */
+	--push: rgb(233, 150, 122); /* salmon — push */
+	--call: rgb(143, 188, 139); /* green — call */
 	--fold-color: rgb(109, 162, 192); /* blue — fold */
-	--surface: #efefef; /* control / selector surface */
+	--surface: #efefef; /* control / selector / tree-node surface */
 	--surface-hover: #dfdfdf;
 	--grid-line: var(--ink);
 
-	/* Cell geometry scales fluidly with the viewport instead of snapping at a
-	   breakpoint: the 13-column grid grows to fill the width left after the 50px
-	   selector column and the page's 1rem side padding, but is capped at 51px per
-	   cell and never shrinks below 21px. Bar height/width derive from the cell so
-	   proportions hold at every size. --cell-height is the span a fully-played
-	   (fill = 1) bar fills. */
-	--cell-size: clamp(21px, calc((100vw - 50px - 2 * var(--space-4)) / 13), 51px);
+	/* Bar geometry derives from --cell-size, which each variant defines to
+	   account for whatever sits beside the grid (a selector column vs. an action
+	   tree). --cell-height is the span a fully-played (fill = 1) bar fills. */
 	--cell-height: calc(var(--cell-size) - 1px);
 	--bar-width: calc(var(--cell-size) - 2px);
 
@@ -132,39 +135,6 @@
 	height: calc(var(--cell-height) * (1 - var(--fill, 0)));
 }
 
-/* BU/BB selector -------------------------------------------------------- */
-
-.pushfold .selector-col {
-	width: 50px;
-	/* The wrapper is a flex row, so this column already stretches to the grid's
-	   height. Lay the two selectors out as a flex column and let them split that
-	   height with flex: 1 — computing each half in px instead rounds the fluid
-	   --cell-size independently, so the two halves can sum to 1px more or less
-	   than the grid depending on the cell size. */
-	display: flex;
-	flex-direction: column;
-	margin-top: 1px;
-	margin-right: -1px;
-	margin-bottom: -1px;
-}
-
-.pushfold .selector {
-	flex: 1;
-	margin-top: -1px;
-	border: 1px solid var(--grid-line);
-	display: flex;
-	background-color: var(--surface);
-}
-
-.pushfold .selector:hover {
-	cursor: pointer;
-	background-color: var(--surface-hover);
-}
-
-.pushfold .selector-label {
-	margin: auto;
-}
-
 /* Loading + summaries --------------------------------------------------- */
 
 .pushfold .loading {
@@ -175,6 +145,13 @@
 	min-height: calc(13 * var(--cell-size) - 12px);
 	color: var(--muted);
 	font-size: var(--text-base);
+}
+
+/* Rejected-solve message shown beside the controls; shared by both solvers. */
+.pushfold .solve-error {
+	margin-left: var(--space-2);
+	color: var(--muted);
+	font-size: var(--text-sm);
 }
 
 .pushfold .push-summary,
@@ -192,16 +169,14 @@
 	color: var(--muted);
 }
 
-/* Semantic colors shared by selector, bars, and summaries. */
-.pushfold .bu-selected,
-.pushfold .bu-selected:hover,
+/* Semantic colors shared by bars and summaries. Variant-specific navigation
+   (the heads-up selector, the three-way tree nodes) maps onto the same palette
+   in its own file. */
 .pushfold .bet,
 .pushfold .push-summary {
 	background-color: var(--push);
 }
 
-.pushfold .bb-selected,
-.pushfold .bb-selected:hover,
 .pushfold .call,
 .pushfold .call-summary {
 	background-color: var(--call);
@@ -212,8 +187,9 @@
 	background-color: var(--fold-color);
 }
 
-/* The grid itself scales fluidly (see --cell-size above); this breakpoint only
-   reflows the controls, which is a discrete layout change rather than a resize. */
+/* The grid itself scales fluidly (see --cell-size in each variant); this
+   breakpoint only reflows the controls, which is a discrete layout change
+   rather than a resize. */
 @media only screen and (max-width: 1024px) {
 	.pushfold button {
 		font-size: var(--text-sm);

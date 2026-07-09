@@ -1,0 +1,59 @@
+/* Heads-up-specific styles for the push/fold solver (PushFold.svelte).
+ *
+ * Layered on top of the shared pushfold.css: the component carries both the
+ * `.pushfold` (shared) and `.headsup` (this file) root classes. Everything
+ * here is unique to the heads-up UI — the BU/BB selector column that sits left
+ * of the grid, and the cell-size formula that accounts for its width.
+ */
+
+.headsup {
+	/* Cell geometry scales fluidly with the viewport instead of snapping at a
+	   breakpoint: the 13-column grid grows to fill the width left after the 50px
+	   selector column and the page's 1rem side padding, but is capped at 51px per
+	   cell and never shrinks below 21px. */
+	--cell-size: clamp(21px, calc((100vw - 50px - 2 * var(--space-4)) / 13), 51px);
+}
+
+/* BU/BB selector -------------------------------------------------------- */
+
+.headsup .selector-col {
+	width: 50px;
+	/* The wrapper is a flex row, so this column already stretches to the grid's
+	   height. Lay the two selectors out as a flex column and let them split that
+	   height with flex: 1 — computing each half in px instead rounds the fluid
+	   --cell-size independently, so the two halves can sum to 1px more or less
+	   than the grid depending on the cell size. */
+	display: flex;
+	flex-direction: column;
+	margin-top: 1px;
+	margin-right: -1px;
+	margin-bottom: -1px;
+}
+
+.headsup .selector {
+	flex: 1;
+	margin-top: -1px;
+	border: 1px solid var(--grid-line);
+	display: flex;
+	background-color: var(--surface);
+}
+
+.headsup .selector:hover {
+	cursor: pointer;
+	background-color: var(--surface-hover);
+}
+
+.headsup .selector-label {
+	margin: auto;
+}
+
+/* Selected selector maps onto the shared palette (see pushfold.css). */
+.headsup .bu-selected,
+.headsup .bu-selected:hover {
+	background-color: var(--push);
+}
+
+.headsup .bb-selected,
+.headsup .bb-selected:hover {
+	background-color: var(--call);
+}
