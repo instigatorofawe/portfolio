@@ -100,10 +100,8 @@ void Generate(const std::filesystem::path& dir, const Naming& naming, const Sele
     // mod.rs declaring each table file as a submodule. The other frontends pull
     // the files in directly (C++ via #include, TypeScript via module path), so
     // they need no equivalent. The module names are the file stems
-    // ("headsup_equity", "headsup_matchup", "hands"); the heads-up tables are
-    // prefixed so three-way tables can share this module without colliding, and
-    // the hands table is behind the `hands` cargo feature, so its module is gated
-    // to match.
+    // ("headsup_equity", "headsup_matchup", "hands"), and the hands table is
+    // behind the `hands` cargo feature, so its module is gated to match.
     if constexpr (std::same_as<Frontend, RustFrontend>) {
         RustFrontend mod((dir / "mod.rs").string());
         if (selection.equity) {

@@ -1,11 +1,10 @@
 //! Primitives and lookup tables shared by the push/fold solver crates.
 //!
 //! Holds the game-agnostic constants and reference data (grid dimensions,
-//! infoset count, the hand-label grid) plus every generated lookup table. The
-//! heads-up (pairwise) tables are `headsup_`-prefixed so the three-way solver,
-//! which reuses the heads-up equities, can read them from here and add its own
-//! `threeway_`-prefixed tables alongside without collision. The solvers
-//! themselves live in their own crates (`pushfold-headsup`, ...).
+//! infoset count, the hand-label grid) plus every generated lookup table. Each
+//! game's tables live in their own directory module (`generated::headsup`,
+//! `generated::threeway`); the solvers themselves live in their own crates
+//! (`pushfold-headsup`, ...).
 
 pub mod generated;
 
@@ -26,5 +25,5 @@ pub const N_INFOSETS: usize = N_RANKS * N_RANKS;
 /// consume, so it stays out of release builds unless explicitly enabled.
 #[cfg(feature = "hands")]
 pub fn hands() -> [&'static str; N_INFOSETS] {
-    std::array::from_fn(|i| generated::hands::HANDS[i / N_RANKS][i % N_RANKS])
+    std::array::from_fn(|i| generated::headsup::hands::HANDS[i / N_RANKS][i % N_RANKS])
 }
