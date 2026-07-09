@@ -20,7 +20,7 @@
 			"options": {
 				"parallel": false,
 				"commands": [
-					"cmake -S lookups -B lookups/build",
+					"cmake -S lookups -B lookups/build -DCMAKE_BUILD_TYPE=Release",
 					"cmake --build lookups/build --target generate_headsup_lookups",
 					"lookups/build/generate_headsup_lookups pushfold/shared/src/generated/headsup rust"
 				]
@@ -43,7 +43,7 @@
 			"options": {
 				"parallel": false,
 				"commands": [
-					"cmake -S lookups -B lookups/build",
+					"cmake -S lookups -B lookups/build -DCMAKE_BUILD_TYPE=Release",
 					"cmake --build lookups/build --target generate_threeway_lookups",
 					"lookups/build/generate_threeway_lookups pushfold/shared/src/generated/threeway rust"
 				]

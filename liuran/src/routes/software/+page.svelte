@@ -39,6 +39,17 @@
 				Precomputed tables of equities and matchup probabilities enable fast solutions.
 			</p>
 		</li>
+		<li>
+			<p class="title">
+				<a href={resolve('/software/threeway/')}>Push/fold three-way Texas Hold'em solver</a>
+			</p>
+			<p class="description">
+				A CFR+ approximation of the 3-player Push/Fold subgame of Texas Hold'em, written in Rust and
+				compiled to WebAssembly. With three players CFR carries no convergence guarantee to a Nash
+				equilibrium, so the solver reports NashConv (the summed best-response gaps) instead: a small
+				value still certifies the profile is hard to exploit.
+			</p>
+		</li>
 	</ul>
 </main>
 

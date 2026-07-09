@@ -20,6 +20,24 @@
 			"options": {
 				"command": "./scripts/build-headsup.sh"
 			}
+		},
+		"build-threeway-wasm": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"dependsOn": [
+				{ "projects": ["lookups"], "target": "generate-lookups" }
+			],
+			"inputs": [
+				"{projectRoot}/Cargo.toml",
+				"{projectRoot}/Cargo.lock",
+				"{projectRoot}/shared/**/*",
+				"{projectRoot}/threeway/**/*",
+				"{workspaceRoot}/scripts/build-threeway.sh"
+			],
+			"outputs": ["{workspaceRoot}/liuran/src/lib/pkg/threeway"],
+			"options": {
+				"command": "./scripts/build-threeway.sh"
+			}
 		}
 	}
 }

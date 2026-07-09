@@ -6,3 +6,8 @@ members = ["shared", "headsup", "threeway"]
 [profile.release]
 lto = true
 strip = true
+
+# The three-way solver's tests contract 169^3 tensors every CFR iteration,
+# which is unusably slow without optimization, so test builds keep it on.
+[profile.test]
+opt-level = 3
