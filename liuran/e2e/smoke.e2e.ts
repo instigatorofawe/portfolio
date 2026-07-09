@@ -98,3 +98,22 @@ test('push/fold solver loads the WASM module and produces a solution', async ({ 
 	await expect(page.getByText(/push \d/)).toBeVisible();
 	await expect(page.getByText(/call \d/)).toBeVisible();
 });
+
+test('three-way solver loads the WASM module and produces a solution', async ({ page }) => {
+	// The three-way solver runs 1000 CFR+ iterations of an O(N^3) game in a
+	// worker — markedly heavier than the heads-up solver — so give the async
+	// solve room to finish before the assertions time out.
+	test.setTimeout(60_000);
+	await page.goto('/software/threeway/');
+	await expect(page).toHaveTitle('Ran Liu - Three-Way Push/Fold Solver');
+
+	// Once the worker instantiates the WASM module and the first solve completes,
+	// the loading placeholder gives way to the decision tree, the frequency
+	// summary for the selected node (BU push by default), and the exploitability.
+	// Target the summary spans by class and use toContainText, which normalizes
+	// whitespace — the action word and percentage sit on separate source lines.
+	const solved = { timeout: 60_000 };
+	await expect(page.getByText('Loading solver…')).toBeHidden(solved);
+	await expect(page.locator('.push-summary')).toContainText(/push\s+\d/, solved);
+	await expect(page.locator('.exploitability-summary')).toContainText('bb/100', solved);
+});
