@@ -16,9 +16,16 @@ export type SolveRequest = {
 };
 
 export type SolveResponse =
+	// A fresh worker is spun up per solve (see Threeway.svelte) so a stale
+	// solve can be killed outright instead of queuing behind it; posted as
+	// soon as the wasm import has resolved, so the caller knows it's safe to
+	// post a SolveRequest without racing the module still loading.
+	| { type: 'ready' }
+	/** Fraction of iterations complete, in (0, 1]; reported at most ~100 times. */
+	| { id: number; type: 'progress'; fraction: number }
 	| {
 			id: number;
-			ok: true;
+			type: 'done';
 			buPush: Float32Array;
 			sbCall: Float32Array;
 			sbPush: Float32Array;
@@ -27,7 +34,7 @@ export type SolveResponse =
 			bbCallSb: Float32Array;
 			exploitability: number;
 	  }
-	| { id: number; ok: false; error: string };
+	| { id: number; type: 'error'; error: string };
 
 // The DOM and webworker TS libs declare incompatible types for `self`, and
 // this file lives in a project whose tsconfig is shared with DOM code; a
@@ -44,12 +51,22 @@ const workerSelf = self as unknown as WorkerGlobal;
 // PushFold.svelte.
 let solver: ThreewaySolver | null = null;
 
+workerSelf.postMessage({ type: 'ready' }, []);
+
 workerSelf.onmessage = (event) => {
 	const { id, stackBu, stackSb, stackBb, sb, ante, iterations } = event.data;
 	solver ??= new ThreewaySolver();
 
 	try {
-		const result = solver.solve(stackBu, stackSb, stackBb, sb, ante, iterations);
+		const result = solver.solve(
+			stackBu,
+			stackSb,
+			stackBb,
+			sb,
+			ante,
+			iterations,
+			(fraction: number) => workerSelf.postMessage({ id, type: 'progress', fraction }, [])
+		);
 		const buPush = result.bu_push;
 		const sbCall = result.sb_call;
 		const sbPush = result.sb_push;
@@ -63,7 +80,7 @@ workerSelf.onmessage = (event) => {
 		// view into wasm memory), so transferring it back is safe and free of
 		// an extra structured-clone copy.
 		workerSelf.postMessage(
-			{ id, ok: true, buPush, sbCall, sbPush, bbCallBoth, bbCallBu, bbCallSb, exploitability },
+			{ id, type: 'done', buPush, sbCall, sbPush, bbCallBoth, bbCallBu, bbCallSb, exploitability },
 			[
 				buPush.buffer,
 				sbCall.buffer,
@@ -76,6 +93,6 @@ workerSelf.onmessage = (event) => {
 	} catch (e) {
 		// The Rust layer rejected something the UI check missed; report it
 		// rather than let the worker die silently.
-		workerSelf.postMessage({ id, ok: false, error: String(e) }, []);
+		workerSelf.postMessage({ id, type: 'error', error: String(e) }, []);
 	}
 };

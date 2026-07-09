@@ -53,6 +53,13 @@ export class ThreewaySolver {
     /**
      * Runs CFR+ (regret clamping, alternating updates, linear averaging)
      * and returns the averaged strategies with their NashConv gap.
+     *
+     * A solve is O(N^3) per iteration and can run for several seconds; when
+     * `progress` is given, it's called with the fraction of iterations
+     * complete (in (0, 1], reaching exactly 1 on the last iteration) so a
+     * caller can render a progress indicator. Reported at most ~100 times
+     * regardless of `iterations`, so the callback overhead stays negligible
+     * next to the O(N^3) work it's interleaved with.
      */
-    solve(stack_bu: number, stack_sb: number, stack_bb: number, sb: number, ante: number, iterations: number): Strategies;
+    solve(stack_bu: number, stack_sb: number, stack_bb: number, sb: number, ante: number, iterations: number, progress?: Function | null): Strategies;
 }

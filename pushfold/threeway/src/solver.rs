@@ -295,6 +295,14 @@ impl ThreewaySolver {
 
     /// Runs CFR+ (regret clamping, alternating updates, linear averaging)
     /// and returns the averaged strategies with their NashConv gap.
+    ///
+    /// A solve is O(N^3) per iteration and can run for several seconds; when
+    /// `progress` is given, it's called with the fraction of iterations
+    /// complete (in (0, 1], reaching exactly 1 on the last iteration) so a
+    /// caller can render a progress indicator. Reported at most ~100 times
+    /// regardless of `iterations`, so the callback overhead stays negligible
+    /// next to the O(N^3) work it's interleaved with.
+    #[allow(clippy::too_many_arguments)]
     pub fn solve(
         &mut self,
         stack_bu: f32,
@@ -303,13 +311,21 @@ impl ThreewaySolver {
         sb: f32,
         ante: f32,
         iterations: u32,
+        progress: Option<js_sys::Function>,
     ) -> Result<Strategies, SolverError> {
         let stacks = [stack_bu, stack_sb, stack_bb];
         validate_inputs(stacks, sb, ante, iterations)?;
         self.setup(stacks, sb, ante);
 
+        let report_every = (iterations / 100).max(1);
         for t in 1..=iterations {
             self.cfr_iterate(t);
+            if let Some(callback) = &progress
+                && (t % report_every == 0 || t == iterations)
+            {
+                let fraction = JsValue::from_f64(t as f64 / iterations as f64);
+                let _ = callback.call1(&JsValue::NULL, &fraction);
+            }
         }
 
         let bu_push = self.bu.average(self.weight_sum);
@@ -674,6 +690,7 @@ mod tests {
                 SMALL_BLIND,
                 ANTE,
                 iterations,
+                None,
             )
             .unwrap()
     }

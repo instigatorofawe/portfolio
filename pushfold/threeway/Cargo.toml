@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 pushfold-shared = { path = "../shared" }
 ndarray = "0.16.1"
 wasm-bindgen = "0.2.125"
+js-sys = "0.3"
 
 [dev-dependencies]
 # Tests pretty-print strategies over the hand grid, so they pull in the `hands`

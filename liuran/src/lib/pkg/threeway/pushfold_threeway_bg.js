@@ -48,7 +48,7 @@ export class Strategies {
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var v1 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_export(r0, r1 * 4, 4);
+            wasm.__wbindgen_export2(r0, r1 * 4, 4);
             return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
@@ -64,7 +64,7 @@ export class Strategies {
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var v1 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_export(r0, r1 * 4, 4);
+            wasm.__wbindgen_export2(r0, r1 * 4, 4);
             return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
@@ -80,7 +80,7 @@ export class Strategies {
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var v1 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_export(r0, r1 * 4, 4);
+            wasm.__wbindgen_export2(r0, r1 * 4, 4);
             return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
@@ -96,7 +96,7 @@ export class Strategies {
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var v1 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_export(r0, r1 * 4, 4);
+            wasm.__wbindgen_export2(r0, r1 * 4, 4);
             return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
@@ -112,7 +112,7 @@ export class Strategies {
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var v1 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_export(r0, r1 * 4, 4);
+            wasm.__wbindgen_export2(r0, r1 * 4, 4);
             return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
@@ -128,7 +128,7 @@ export class Strategies {
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var v1 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_export(r0, r1 * 4, 4);
+            wasm.__wbindgen_export2(r0, r1 * 4, 4);
             return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
@@ -174,18 +174,26 @@ export class ThreewaySolver {
     /**
      * Runs CFR+ (regret clamping, alternating updates, linear averaging)
      * and returns the averaged strategies with their NashConv gap.
+     *
+     * A solve is O(N^3) per iteration and can run for several seconds; when
+     * `progress` is given, it's called with the fraction of iterations
+     * complete (in (0, 1], reaching exactly 1 on the last iteration) so a
+     * caller can render a progress indicator. Reported at most ~100 times
+     * regardless of `iterations`, so the callback overhead stays negligible
+     * next to the O(N^3) work it's interleaved with.
      * @param {number} stack_bu
      * @param {number} stack_sb
      * @param {number} stack_bb
      * @param {number} sb
      * @param {number} ante
      * @param {number} iterations
+     * @param {Function | null} [progress]
      * @returns {Strategies}
      */
-    solve(stack_bu, stack_sb, stack_bb, sb, ante, iterations) {
+    solve(stack_bu, stack_sb, stack_bb, sb, ante, iterations, progress) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.threewaysolver_solve(retptr, this.__wbg_ptr, stack_bu, stack_sb, stack_bb, sb, ante, iterations);
+            wasm.threewaysolver_solve(retptr, this.__wbg_ptr, stack_bu, stack_sb, stack_bb, sb, ante, iterations, isLikeNone(progress) ? 0 : addHeapObject(progress));
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
@@ -202,10 +210,17 @@ if (Symbol.dispose) ThreewaySolver.prototype[Symbol.dispose] = ThreewaySolver.pr
 export function __wbg___wbindgen_throw_ea4887a5f8f9a9db(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
+export function __wbg_call_5575218572ead796() { return handleError(function (arg0, arg1, arg2) {
+    const ret = getObject(arg0).call(getObject(arg1), getObject(arg2));
+    return addHeapObject(ret);
+}, arguments); }
 export function __wbindgen_cast_0000000000000001(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return addHeapObject(ret);
+}
+export function __wbindgen_object_drop_ref(arg0) {
+    takeObject(arg0);
 }
 const StrategiesFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
@@ -264,10 +279,22 @@ function getUint8ArrayMemory0() {
 
 function getObject(idx) { return heap[idx]; }
 
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        wasm.__wbindgen_export(addHeapObject(e));
+    }
+}
+
 let heap = new Array(1024).fill(undefined);
 heap.push(undefined, null, true, false);
 
 let heap_next = heap.length;
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
 
 function takeObject(idx) {
     const ret = getObject(idx);

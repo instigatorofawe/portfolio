@@ -18,6 +18,13 @@ export default defineConfig({
 	define: {
 		__LAST_COMMIT_DATE__: JSON.stringify(lastCommitDate)
 	},
+	worker: {
+		// Vite's default worker output ('iife') can't express the top-level
+		// await vite-plugin-wasm emits to instantiate the .wasm module; the
+		// three-way solver's worker (src/lib/workers/threeway.worker.ts) needs
+		// the 'es' format to build at all.
+		format: 'es'
+	},
 	plugins: [
 		sveltekit({
 			compilerOptions: {

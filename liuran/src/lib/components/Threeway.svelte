@@ -48,56 +48,90 @@
 	// the way.
 	let solution = $state<Solution | null>(null);
 	let solving = $state(false);
+	// Fraction of the in-flight solve's iterations completed, driven by the
+	// Rust solver's own progress callback (see solve() in solver.rs) rather
+	// than a guessed timer, so it tracks actual CFR+ progress.
+	let solveProgress = $state(0);
 	let solveError = $state<string | null>(null);
 
 	let worker: Worker | null = null;
-	// Bumped per dispatched request so a response can be checked against it;
-	// responses to superseded requests (a fresher edit already went out) are
-	// dropped instead of clobbering newer results.
+	// Bumped per dispatched request; a response is discarded unless it
+	// matches the current value, which covers the (normally impossible) case
+	// of a message from a worker whose termination hasn't taken effect yet.
 	let latestRequestId = 0;
 
-	$effect(() => {
+	type SolveParams = {
+		stackBu: number;
+		stackSb: number;
+		stackBb: number;
+		sb: number;
+		ante: number;
+	};
+
+	// The wasm solve is one long synchronous call inside the worker, with no
+	// point at which it checks for cancellation — so a superseded solve can't
+	// be told to stop, only killed. Each dispatch therefore terminates
+	// whatever worker is currently running (idle or not) and starts a fresh
+	// one, instead of reusing one long-lived worker and letting stale
+	// requests queue up behind it.
+	function dispatchSolve(params: SolveParams) {
+		worker?.terminate();
+
+		const id = ++latestRequestId;
 		const w = new Worker(new URL('../workers/threeway.worker.ts', import.meta.url), {
 			type: 'module'
 		});
 		w.onmessage = (event: MessageEvent<import('$lib/workers/threeway.worker').SolveResponse>) => {
 			const data = event.data;
+			if (data.type === 'ready') {
+				// The wasm import has resolved; only now is it safe to post the
+				// solve request without racing the worker's module still
+				// loading (a bare postMessage right after `new Worker()` can be
+				// dropped before that import settles).
+				w.postMessage({ id, ...params, iterations: N_ITER });
+				return;
+			}
 			if (data.id !== latestRequestId) return;
-			solving = false;
-			if (data.ok) {
-				solution = {
-					buPush: data.buPush,
-					sbCall: data.sbCall,
-					sbPush: data.sbPush,
-					bbCallBoth: data.bbCallBoth,
-					bbCallBu: data.bbCallBu,
-					bbCallSb: data.bbCallSb,
-					exploitability: data.exploitability
-				};
-				solveError = null;
-			} else {
-				// The Rust layer rejected something the UI check missed;
-				// degrade gracefully rather than leave `solving` stuck.
-				console.error('solver rejected inputs', data.error);
-				solveError = data.error;
+			switch (data.type) {
+				case 'progress':
+					solveProgress = data.fraction;
+					break;
+				case 'done':
+					solving = false;
+					solution = {
+						buPush: data.buPush,
+						sbCall: data.sbCall,
+						sbPush: data.sbPush,
+						bbCallBoth: data.bbCallBoth,
+						bbCallBu: data.bbCallBu,
+						bbCallSb: data.bbCallSb,
+						exploitability: data.exploitability
+					};
+					solveError = null;
+					break;
+				case 'error':
+					// The Rust layer rejected something the UI check missed;
+					// degrade gracefully rather than leave `solving` stuck.
+					console.error('solver rejected inputs', data.error);
+					solving = false;
+					solveError = data.error;
+					break;
 			}
 		};
+
 		worker = w;
-		return () => {
-			w.terminate();
-			worker = null;
-		};
+		solving = true;
+		solveProgress = 0;
+	}
+
+	$effect(() => {
+		return () => worker?.terminate();
 	});
 
 	$effect(() => {
 		const params = { stackBu, stackSb, stackBb, sb, ante };
 		if (validationError) return;
-		const timer = setTimeout(() => {
-			if (!worker) return;
-			const id = ++latestRequestId;
-			solving = true;
-			worker.postMessage({ id, ...params, iterations: N_ITER });
-		}, DEBOUNCE_MS);
+		const timer = setTimeout(() => dispatchSolve(params), DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	});
 
@@ -206,7 +240,7 @@
 		<div class="configs">
 			<button onclick={() => reset()}>Default</button>
 			{#if solving}
-				<span class="solving-indicator">Solving…</span>
+				<span class="solving-indicator">Solving… {Math.round(solveProgress * 100)}%</span>
 			{:else if solveError}
 				<span class="solving-indicator" role="alert">{solveError}</span>
 			{/if}
