@@ -91,7 +91,7 @@ jobs:
       # Pinned (not @stable) so the toolchain matches rust-toolchain.toml.
       # Bump together with rust-toolchain.toml and the `build` job on upgrade.
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: dtolnay/rust-toolchain@1.100.0
 
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
@@ -166,7 +166,7 @@ jobs:
       # rust-toolchain.toml / local dev. Bump together with rust-toolchain.toml
       # and the `test-rust` job on upgrade.
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: dtolnay/rust-toolchain@1.100.0
         with:
           targets: wasm32-unknown-unknown
 
