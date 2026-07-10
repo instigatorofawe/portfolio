@@ -22,10 +22,10 @@
 		"test": "pnpm -C liuran test",
 		"test:unit": "pnpm -C liuran test:unit",
 		"test:e2e": "pnpm -C liuran test:e2e",
-		"install:liuran": "pnpm -C liuran install",
 		"build:pushfold": "./scripts/build-headsup.sh"
 	},
 	"devDependencies": {
-		"nx": "^23.0.0"
+		"nx": "^23.0.0",
+		"typescript": "^6.0.3"
 	}
 }

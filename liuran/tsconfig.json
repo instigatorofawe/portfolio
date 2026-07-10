@@ -1,6 +1,12 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
+		// Teaches the editor's tsserver to resolve .svelte imports (incl. named
+		// type exports) via svelte2tsx instead of the default-export-only
+		// `declare module '*.svelte'` shim. Editor-only: tsc and svelte-check
+		// ignore `plugins`; VS Code also needs the Svelte extension's
+		// `svelte.enable-ts-plugin` setting on to load workspace TS plugins.
+		"plugins": [{ "name": "typescript-svelte-plugin" }],
 		"rewriteRelativeImportExtensions": true,
 		"allowJs": true,
 		"checkJs": true,

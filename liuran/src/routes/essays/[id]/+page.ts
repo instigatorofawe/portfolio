@@ -2,7 +2,7 @@ import type { PageLoad, EntryGenerator } from './$types';
 import { error } from '@sveltejs/kit';
 import essays from '$lib/assets/essays.yml?raw';
 import { sanitizeHtml } from '$lib/sanitize';
-import Essay from '$lib/components/EssaysTable.svelte';
+import type { Essay } from '$lib/components/EssaysTable.svelte';
 import { marked } from 'marked';
 import { parse } from 'yaml';
 

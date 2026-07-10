@@ -34,9 +34,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: |
-            pnpm-lock.yaml
-            liuran/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       # Pinned (not @stable) so the toolchain matches rust-toolchain.toml and the
       # committed wasm stays byte-reproducible. Bump both together on upgrade.
@@ -66,9 +64,7 @@ jobs:
             nx-${{ runner.os }}-
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm install:liuran --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       # Runs the full Nx pipeline: lookups -> wasm -> app. This also produces
       # liuran/src/lib/pkg, which the check/lint/test steps below import.
