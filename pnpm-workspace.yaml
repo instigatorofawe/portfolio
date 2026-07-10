@@ -4,6 +4,19 @@ packages:
 allowBuilds:
   nx: true
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@nx/nx-darwin-arm64@23.0.2'
+  - '@nx/nx-darwin-x64@23.0.2'
+  - '@nx/nx-freebsd-x64@23.0.2'
+  - '@nx/nx-linux-arm-gnueabihf@23.0.2'
+  - '@nx/nx-linux-arm64-gnu@23.0.2'
+  - '@nx/nx-linux-arm64-musl@23.0.2'
+  - '@nx/nx-linux-x64-gnu@23.0.2'
+  - '@nx/nx-linux-x64-musl@23.0.2'
+  - '@nx/nx-win32-arm64-msvc@23.0.2'
+  - '@nx/nx-win32-x64-msvc@23.0.2'
+  - eslint@10.7.0
+  - nx@23.0.2
 # Allow install scripts to run (pnpm blocks dependency build scripts by
 # default): nx for the root task runner, esbuild for the liuran app. Settings
 # live here in pnpm 10+; the `pnpm` field in package.json is no longer read.
