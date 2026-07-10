@@ -1,13 +1,13 @@
-# On the Morality of *Nirvana in Fire*
+# On the Morality of _Nirvana in Fire_
 
-The morality of *Nirvana in Fire* (琅琊榜) is not ambiguous. There are clear heroes and villains, and neither vacillate
+The morality of _Nirvana in Fire_ (琅琊榜) is not ambiguous. There are clear heroes and villains, and neither vacillate
 in their moral choices: for all that Prince Jing suspects Mei Changsu of wrongdoing, he never once acts out of
 self-interest or against the common good, and is unwavering in his convictions. Xie Yu, Xia Jiang, Prince Yu, and the
 Emperor of Liang are similarly unrepentant: though they each fall to ruin, they never regret that they chose expediency
 over righteousness, nor do they consider the suffering which their actions inflict upon the people, lamenting only that
-their schemes were foiled. Thus, in essence, *Nirvana in Fire* is an endorsement of the heroes' values and an indictment
+their schemes were foiled. Thus, in essence, _Nirvana in Fire_ is an endorsement of the heroes' values and an indictment
 of the villains'. Precisely because its morality is unambiguous, it is possible to interrogate the heroic ideals which
-it espouses, and in doing so, comprehend one aspect of Chinese ideology and values. Though *Nirvana in Fire* is set in a
+it espouses, and in doing so, comprehend one aspect of Chinese ideology and values. Though _Nirvana in Fire_ is set in a
 fictionalized ancient China (with accompanying supernatural martial arts), and ostensibly portrays an ancient culture,
 it is a modern work of fiction written for a modern audience, and reflects their modern values more closely than one
 might suppose. These values are not those of modern western culture, and are premised upon different axioms than those
@@ -54,11 +54,11 @@ truth when self-interest is at stake (Haidt, 2001). Humans are not only biased t
 towards a belief in their own righteousness, and that of their tribe. Human cognitive ability is limited also, and thus
 there is also the tendency towards simplicity rather than nuance, towards dogmatism rather than flexibility. The optimal
 course of action changes with the circumstances, and is beyond the scope of calculation. Nonetheless, some
-approximations are better than others, and some are more capable in their calculations; in *Romance of the Three
-Kingdoms* (三国演义) (Luo, 2004), the sufficiently wise are able to perceive the will of Heaven.
+approximations are better than others, and some are more capable in their calculations; in _Romance of the Three
+Kingdoms_ (三国演义) (Luo, 2004), the sufficiently wise are able to perceive the will of Heaven.
 
-The western Han historian Sima Qian, in *Records of the Grand Historian* (史记), writes that the rise and fall of a
-dynasty is fundamentally a matter of morality. These sentiments are echoed in *Nirvana in Fire* when Xiao Jingrui
+The western Han historian Sima Qian, in _Records of the Grand Historian_ (史记), writes that the rise and fall of a
+dynasty is fundamentally a matter of morality. These sentiments are echoed in _Nirvana in Fire_ when Xiao Jingrui
 remarks to Yan Yujin (in Episode 14) that scheming is now seen as the new norm at court: those who do not take part in
 palace intrigues are seen as naïve. Because the Emperor is suspicious in nature, distrustful of those who serve him
 regardless of their loyalty and sincerity, those beneath him are preoccupied with guessing at his intentions and
@@ -75,12 +75,12 @@ are incentivized, and immoral actions are disincentivized.
 The finer points of Confucianism have been debated by scholars since its inception in the Spring and Autumn Period, and
 its Four Books and Five Classics (四书五经) have served as educational canon for over two and a half millennia: learned
 characters in Nirvana in Fire often quote these works directly, and educated modern viewers would recognize these
-allusions. For example, Mei Changsu paraphrases the *Zuozhuan* (左傳) (Durrant, Li, & Schaberg, 2016) when he says to Mu
+allusions. For example, Mei Changsu paraphrases the _Zuozhuan_ (左傳) (Durrant, Li, & Schaberg, 2016) when he says to Mu
 Nihuang (in Episode 2) that the reason why he has come to the capital is that, “as birds choose trees to nest in, men of
 talent choose worthy lords to serve” (良禽择木而栖，良臣择主而事). Enlightenment philosophers, whose works underpin or
 at least influence most mainstream ideology in the United States, clearly arrive at different views on human beings,
 society, and government. Yet there is at least one similarity: Rousseau would agree that the role of the sovereign is to
-uphold the common good, but posited in *The Social Contract* that sovereignty resided in the will of the people,
+uphold the common good, but posited in _The Social Contract_ that sovereignty resided in the will of the people,
 separate from government; monarchy, placing responsibility upon one man, is often likely to fail to live up its purpose,
 resulting in tyranny.
 
@@ -106,8 +106,8 @@ Similarly, Kant believed that free will was essential for the existence of moral
 free choice between right and wrong. This view of an axiomatic morality existing as an objective concept independent of
 human cognition is potentially suspect, especially in light of recent developments in the understanding of the role of
 neurology in morality, yet is a recurring trend within Enlightenment thought and its derivatives. Like Rousseau, Locke
-in his *Two Treatises of Government* puts forth as axioms that in the state of nature, men are born free and equal.
-Jefferson in the *Declaration of Independence* writes the iconic words, “We hold these truths to be self-evident that
+in his _Two Treatises of Government_ puts forth as axioms that in the state of nature, men are born free and equal.
+Jefferson in the _Declaration of Independence_ writes the iconic words, “We hold these truths to be self-evident that
 all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are
 Life, Liberty, and the pursuit of Happiness.” These theories are all reliant upon the truth of certain metaphysical
 conceptions of the world and human nature; yet Confucian ethics and morality are at least to a greater degree
@@ -133,9 +133,9 @@ for the life of one man, and as his former subordinate in the Chiyan Army, Wei Z
 death. Yet in the end, he can only advise Prince Jing against his chosen course of action, and can only do his best to
 save Wei Zheng when Prince Jing will not reconsider. He and Prince Jing are the Confucian ideals of subject and lord:
 Prince Jing is righteous (义) and humane (仁), whereas Mei Changsu is talented (才) and loyal (忠), among their other
-virtues. The *Analects* (论语) state, “the gentleman understands what is moral, the petty man what is profitable”
+virtues. The _Analects_ (论语) state, “the gentleman understands what is moral, the petty man what is profitable”
 (君子喻于义, 小人喻于利). Their relationship parallels that between Zhuge Liang, styled Kongming, and Liu Bei in
-*Romance of the Three Kingdoms*, though whereas Liu Bei must pay three visits to Zhuge Liang’s thatched cottage to
+_Romance of the Three Kingdoms_, though whereas Liu Bei must pay three visits to Zhuge Liang’s thatched cottage to
 recruit him to his cause, Prince Yu and the Crown Prince are unable to recruit Mei Changsu, no matter how they try; Mei
 Changsu chooses to serve Prince Jing of his own accord. Their dilemma mirrors Liu Bei’s decision during the
 (fictionalized) retreat from Fancheng to Xiakou: the citizens wish to accompany Liu Bei, yet the presence of hundreds of
@@ -150,7 +150,7 @@ overtake him at Changban, and Liu Bei is ultimately forced to flee; the civilian
 one of Liu Bei’s wives (Lady Mi) dies in the process.
 
 It is an enduring dilemma that morality is often an impediment to the attainment of power, and thus, all positions of
-power and authority tend towards corruption. F.A. Hayek in *The Road to Serfdom* remarks that centralization of
+power and authority tend towards corruption. F.A. Hayek in _The Road to Serfdom_ remarks that centralization of
 authority tends to lead to tyranny because it selects for those who are willing to impose their designs on others. But
 perhaps this statement only holds true for societies with Liberal norms of freedom and autonomy. When Prince Jing comes
 to set limits for what strategies he will allow Mei Changsu to employ, Mei Changsu states that while he will do his best
@@ -159,7 +159,7 @@ this. Neither of our heroes object to attaining and wielding authority; indeed, 
 ideal of the gentleman (君子) to aspire to serve in public office in order to wield state power for the material and
 moral betterment of the common people. Yet even if their lords should choose poorly, neither strategist can help but
 obey. There are situations in which countermanding the ruler is acceptable, such as imminent military emergency; Sun Tzu
-writes in the *Art of War* (孫子兵法) that under certain circumstances, a commander in the field need not heed the
+writes in the _Art of War_ (孫子兵法) that under certain circumstances, a commander in the field need not heed the
 sovereign, but in general, the rigidity of the Confucian hierarchy leaves little recourse for when tyrants assume the
 throne.
 
@@ -182,14 +182,14 @@ largely adopt the instruments of Qin government (albeit with much softer laws), 
 state ideology; some aspects of Legalist philosophy would be assimilated into Confucian thought: Reward and punishment,
 as the state tools of moral guidance, should be applied consistently and impartially. Laws and the delineation of state
 responsibility should be clear and unambiguous; ties of personal friendship and familial relationships should not
-interfere in the exercise of official duties. Zhuge Liang, who in *Romance of the Three Kingdoms* is portrayed as a
+interfere in the exercise of official duties. Zhuge Liang, who in _Romance of the Three Kingdoms_ is portrayed as a
 paragon of Confucian values, executes Ma Su, his close friend, in accordance with military law when he makes a tactical
 blunder and fails to defend Jieting. But while clear organization of government, efficiency in administration, and the
 impartial rule of law are desirable qualities in a state, political expediency, while useful for the short-term gain of
 political power, is inimical to its long-term stability.
 
 Cao Cao is also another notable proponent of legalism; coincidentally, he also rose to prominence through his
-assassination attempt on Dong Zhuo. In *Romance of the Three Kingdoms*, he states that when selecting subordinates, he
+assassination attempt on Dong Zhuo. In _Romance of the Three Kingdoms_, he states that when selecting subordinates, he
 is primarily concerned with their talents, rather than their morals. Cao Wei is also an efficient state, and becomes the
 most powerful of the Three Kingdoms. Yet the irony is that Sima Yi, whom Cao Cao selected on the basis of talent, would
 not serve Wei whole-heartedly, and would ultimately overthrow the Cao clan; his descendants would establish the Jin
@@ -255,7 +255,7 @@ proclaimed that there would be no further evolution of government and ideology, 
 essentially a stable equilibrium. Both the Soviet Union and Nazi Germany had emerged out of previously democratic
 nations, demonstrating that representative government in the 20th century could degenerate into authoritarianism; but
 even once these challenges had been overcome, it was mistaken to view Liberal democracy as the inevitable conclusion of
-all sociopolitical evolution; as the opening lines of *Romance of the Three Kingdoms* state, “Thus is the great trend:
+all sociopolitical evolution; as the opening lines of _Romance of the Three Kingdoms_ state, “Thus is the great trend:
 the Empire, long divided, must unite, and long united, must divide.” (话说天下大势，分久必合，合久必分).
 
 Perhaps this belief in a kind of manifest destiny is an extension of tendencies in western thinking, prevalent since the
@@ -268,7 +268,7 @@ its orbit. In an age of declining religion, it becomes unclear from whence now t
 pursuit of Happiness derive, as they are not necessarily self-evident to those who do not share its religious sentiment.
 The current postmodern ideological vogue asserts that all structures inadequate to capture reality, and thus all
 conceptions of objective truth are invalid. This is true, as all models are approximations, but neglects the fact that
-some models are useful, and that some approximations are more accurate than others. Ibn Khaldun in the *Muqadimmah*
+some models are useful, and that some approximations are more accurate than others. Ibn Khaldun in the _Muqadimmah_
 writes on the role of Asabiyyah, or social cohesion, in the historical cycle: that when a society has lost its cohesion,
 it begins its decline, until it is displaced by another, more cohesive, and more vigorous group. This portends poorly
 for the future of Liberalism in the United States, as its internal politics become increasingly polarized and divided;
@@ -289,7 +289,7 @@ declares that there are “universal principles of mankind” which motivate the
 In truth, however, Liberal democracy is neither impossible nor inevitable, but the product of human action, requiring
 both opportunity and effective execution to succeed.
 
-*Nirvana in Fire* is premised largely on Confucian aesthetic values, and its underlying moral philosophy begins on
+_Nirvana in Fire_ is premised largely on Confucian aesthetic values, and its underlying moral philosophy begins on
 a different, yet valid, set of observations of human nature than western classical Liberalism. Though it ultimately
 draws different conclusions on humans, society, and government, these ideological differences are not fundamentally
 irreconcilable, and its moral reasoning is largely legible and intuitive to the western viewer, providing insight into
@@ -298,16 +298,17 @@ atomization and polarization, its premise underscores the need for societal cohe
 coherent secular ideology can provide a stable societal framework.
 
 ## References and Further Reading
+
 1. [Nirvana in Fire \(琅琊榜\)](https://www.viki.com/tv/22943c) on Viki, a streaming service.
-1. De Waal, F., Macedo, S. E., & Ober, J. E. (2006). *Primates and philosophers: How morality evolved:* Princeton University Press.
-1. Brown, D. E. (2004). Human universals, human nature & human culture. *Daedalus*, 133(4), 47-54. 
-1. Durrant, S. W., Li, W.-y., & Schaberg, D. (2016). *Zuo Traditions:* University of Washington Press.
-1. Fumagalli, M., & Priori, A. (2012). Functional and clinical neuroanatomy of morality. *Brain*, 135(7), 2006-2021. doi:10.1093/brain/awr334
-1. Gregory, S., Simmons, A., Kumari, V., Howard, M., Hodgins, S., & Blackwood, N. (2012). The antisocial brain: psychopathy matters: a structural MRI investigation of antisocial male violent offenders. *Archives of general psychiatry*, 69(9), 962-972. 
-1. Haidt, J. (2001). The emotional dog and its rational tail: a social intuitionist approach to moral judgment. *Psychological review*, 108(4), 814. 
-1. Israel, S., Hasenfratz, L., & Knafo-Noam, A. (2015). The genetics of morality and prosociality. *Current Opinion in Psychology*, 6, 55-59. 
-1. Itzkowitz, S. (2018). Psychopathy and human evil: An overview. *Contemporary Psychoanalysis*, 54(1), 40-63. 
-1. Luo, G. (2004). *Three Kingdoms, A Historical Novel: Complete and Unabridged:* Univ of California Press.
-1. Moll, J., de Oliveira-Souza, R., Eslinger, P. J., Bramati, I. E., Mourão-Miranda, J. n., Andreiuolo, P. A., & Pessoa, L. (2002). The Neural Correlates of Moral Sensitivity: A Functional Magnetic Resonance Imaging Investigation of Basic and Moral Emotions. *The Journal of Neuroscience*, 22(7), 2730-2736. doi:10.1523/jneurosci.22-07-02730.2002
-1. Moll, J., de Oliveira-Souza, R., Moll, F. T., Ignácio, F. A., Bramati, I. E., Caparelli-Dáquer, E. M., & Eslinger, P. J. (2005). The moral affiliations of disgust: A functional MRI study. *Cognitive and behavioral neurology*, 18(1), 68-78. 
-1. Paxton, J. M., & Greene, J. D. (2010). Moral reasoning: Hints and allegations. *Topics in cognitive science*, 2(3), 511-527. 
+1. De Waal, F., Macedo, S. E., & Ober, J. E. (2006). _Primates and philosophers: How morality evolved:_ Princeton University Press.
+1. Brown, D. E. (2004). Human universals, human nature & human culture. _Daedalus_, 133(4), 47-54.
+1. Durrant, S. W., Li, W.-y., & Schaberg, D. (2016). _Zuo Traditions:_ University of Washington Press.
+1. Fumagalli, M., & Priori, A. (2012). Functional and clinical neuroanatomy of morality. _Brain_, 135(7), 2006-2021. doi:10.1093/brain/awr334
+1. Gregory, S., Simmons, A., Kumari, V., Howard, M., Hodgins, S., & Blackwood, N. (2012). The antisocial brain: psychopathy matters: a structural MRI investigation of antisocial male violent offenders. _Archives of general psychiatry_, 69(9), 962-972.
+1. Haidt, J. (2001). The emotional dog and its rational tail: a social intuitionist approach to moral judgment. _Psychological review_, 108(4), 814.
+1. Israel, S., Hasenfratz, L., & Knafo-Noam, A. (2015). The genetics of morality and prosociality. _Current Opinion in Psychology_, 6, 55-59.
+1. Itzkowitz, S. (2018). Psychopathy and human evil: An overview. _Contemporary Psychoanalysis_, 54(1), 40-63.
+1. Luo, G. (2004). _Three Kingdoms, A Historical Novel: Complete and Unabridged:_ Univ of California Press.
+1. Moll, J., de Oliveira-Souza, R., Eslinger, P. J., Bramati, I. E., Mourão-Miranda, J. n., Andreiuolo, P. A., & Pessoa, L. (2002). The Neural Correlates of Moral Sensitivity: A Functional Magnetic Resonance Imaging Investigation of Basic and Moral Emotions. _The Journal of Neuroscience_, 22(7), 2730-2736. doi:10.1523/jneurosci.22-07-02730.2002
+1. Moll, J., de Oliveira-Souza, R., Moll, F. T., Ignácio, F. A., Bramati, I. E., Caparelli-Dáquer, E. M., & Eslinger, P. J. (2005). The moral affiliations of disgust: A functional MRI study. _Cognitive and behavioral neurology_, 18(1), 68-78.
+1. Paxton, J. M., & Greene, J. D. (2010). Moral reasoning: Hints and allegations. _Topics in cognitive science_, 2(3), 511-527.

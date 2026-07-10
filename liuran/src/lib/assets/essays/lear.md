@@ -1,22 +1,22 @@
-# *King Lear* and Kurosawa's *Ran* on the Banality of Virtue
+# _King Lear_ and Kurosawa's _Ran_ on the Banality of Virtue
 
-Many comparisons have been drawn between Kurosawa Akira’s samurai masterpiece *Ran* (乱, translated literally: “chaos”)
-and Shakespeare’s *King Lear*. The film is almost a beat-by-beat adaptation of the play, transplanted in setting from
+Many comparisons have been drawn between Kurosawa Akira’s samurai masterpiece _Ran_ (乱, translated literally: “chaos”)
+and Shakespeare’s _King Lear_. The film is almost a beat-by-beat adaptation of the play, transplanted in setting from
 medieval Britain to the Sengoku Jidai. This is more than simply an aesthetic choice, as it reweights the moral discourse
-on matters such as duty and familiality. Nihilistic interpretations of *King Lear* came into vogue in the 20th century,
-and commentators have pointed to *King Lear* as the inspiration behind absurdist playwrights like Samuel Beckett.
+on matters such as duty and familiality. Nihilistic interpretations of _King Lear_ came into vogue in the 20th century,
+and commentators have pointed to _King Lear_ as the inspiration behind absurdist playwrights like Samuel Beckett.
 Indeed, Lear is a man with unmet psychological needs, who subsequently spirals into madness when his life’s course
 escapes his control. Unlike other tragic heroes who struggle valiantly against their fates, Lear stumbles to his doom in
 a half daze, unable to cope with his life’s changing circumstances. Rescue seemingly comes and he regains his senses
 momentarily, but is soon thrown into imprisonment, where Cordelia, perhaps the most moral character in the play, is
 killed. Though he also outlives his treacherous daughters Goneril and Regan, Lear dies nonetheless, having lost his will
-to live. Yet the narrative of *Ran* is not quite as unmoored from reason and agency. Ichimonji Hidetora, unlike Lear, is
+to live. Yet the narrative of _Ran_ is not quite as unmoored from reason and agency. Ichimonji Hidetora, unlike Lear, is
 more than a vain fool: the three castles which he divides among his sons were obtained through his conquests, and he has
 proven a consummate warlord of the Sengoku Jidai. He has, at least in his past, been able to rule effectively, to see
 through deceptions (as all warfare is deception), and is a formidable, if not necessarily noble character; though later
 repeatedly betrayed, he does inspire loyalty from some of his followers. Yet in a senile lapse of judgment, his life’s
 work is put to ruin. Though Kurosawa’s ending is similarly difficult to grapple with as Shakespeare’s (shortly after
-reuniting with his father, Saburo is abruptly killed by an assassin sent by his brother), *Ran* is not so much absurdist
+reuniting with his father, Saburo is abruptly killed by an assassin sent by his brother), _Ran_ is not so much absurdist
 theater as a cautionary tale about seeking privilege without responsibility, the danger of mistaking substanceless
 claims of virtue for true morality, and the cost of unrestrained sentimentality in a chaotic world.
 
@@ -93,17 +93,17 @@ inferior numbers, valiantly win the day against Jiro’s forces, but with his de
 advantage of the situation to seize Jiro’s stronghold, and is the only one who benefits from the ensuing chaos.
 Kurosawa’s ending illustrates the fragility of the good: that control over one’s life is tenuous at best, that one
 mistake or misfortune can undermine the work of a lifetime, and that a chaotic world may be unforgiving and deeply
-unfair, with loyalty, courage, and filiality that go unrewarded, and no second chances. In *King Lear*, Regan and
+unfair, with loyalty, courage, and filiality that go unrewarded, and no second chances. In _King Lear_, Regan and
 Goneril combine their forces against the French, repelling the invaders. Cordelia is taken captive, and is executed by
 her sisters. Regan and Goneril turn against each other, and also die as a result of their schemes. Shakespeare’s ending
 on the other hand reinforces the absurdity of his narrative, in which no one ultimately benefits, all fall to ruin, and
 the would-be tragic hero, though marked by his hamartia of an infantile psyche, is but a passenger to his doomed fate.
 
-*King Lear* and *Ran* are nearly identical in plot, with many scenes that play out similarly beat-by-beat. Yet subtle
+_King Lear_ and _Ran_ are nearly identical in plot, with many scenes that play out similarly beat-by-beat. Yet subtle
 differences cause the two stories to read very differently in theme and values espoused. Kurosawa’s plot is imbued with
 meaning and coherence through its continuity with the characters’ pasts, an imperfect but still present correspondence
 between actions and consequences, but also through a cultural backdrop that pronounces unambiguous judgments upon the
-characters’ actions. *King Lear* is much more ambiguous in its morality than *Ran*, and literary critics in the 20th
+characters’ actions. _King Lear_ is much more ambiguous in its morality than _Ran_, and literary critics in the 20th
 century often interpreted this ambiguity as nihilism or amorality, but this is not entirely merited. One lesson that may
 be gleaned from Shakespeare’s play is the notion that virtue is banal, and easily overlooked. For any concept of good to
 provide prescriptive value, it must be attainable, and to demand the impossible is to invite deceptive malice. Cordelia

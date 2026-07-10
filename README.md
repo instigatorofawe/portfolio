@@ -42,8 +42,7 @@ repository root — no global install needed.
 ## Setup
 
 ```
-pnpm install          # installs Nx and root tooling
-pnpm install:liuran   # installs the SvelteKit app's dependencies
+pnpm install   # installs every workspace package (Nx, the SvelteKit app, ...)
 ```
 
 Then add the Rust target and `wasm-bindgen` if you don't have them (see the table
