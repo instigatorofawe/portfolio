@@ -13,7 +13,7 @@ All commands below are run from the repository root unless noted otherwise.
 | [`liuran/`](liuran/README.md)  | SvelteKit app (the website), built with Vite and `adapter-static`     |
 | [`pushfold/`](pushfold/README.md)| Rust workspace for the push-fold solvers: `shared` (constants + generated tables), `headsup`, and `threeway`, each compiled to WASM |
 | [`lookups/`](lookups/README.md) | C++ generator that emits the solvers' lookup tables as Rust (or TypeScript) source |
-| `scripts/` | Helper scripts (`build-headsup.sh`, `build-threeway.sh`)             |
+| `scripts/` | Helper scripts (`build-pushfold.sh <headsup\|threeway>`)             |
 
 ## Dependencies
 

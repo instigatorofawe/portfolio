@@ -9,7 +9,7 @@
 		"build:wasm:threeway": "nx build-threeway-wasm pushfold",
 		"lookups": "nx generate-lookups lookups",
 		"lookups:threeway": "nx generate-threeway-lookups lookups",
-		"clean:generated": "rm -rf pushfold/shared/src/generated/headsup pushfold/shared/src/generated/threeway liuran/src/lib/generated liuran/src/lib/pkg",
+		"clean:generated": "rm -rf pushfold/shared/src/generated/headsup liuran/src/lib/generated liuran/src/lib/pkg",
 		"clean": "nx reset && pnpm clean:generated && rm -rf lookups/build pushfold/target liuran/.svelte-kit liuran/build",
 		"rebuild": "pnpm clean && pnpm build",
 		"ci:local": "pnpm build && pnpm check && pnpm lint && pnpm test:cpp && pnpm test:rust && pnpm -C liuran test:unit --run --passWithNoTests && pnpm test:e2e",
@@ -22,7 +22,7 @@
 		"test": "pnpm -C liuran test",
 		"test:unit": "pnpm -C liuran test:unit",
 		"test:e2e": "pnpm -C liuran test:e2e",
-		"build:pushfold": "./scripts/build-headsup.sh"
+		"build:pushfold": "./scripts/build-pushfold.sh headsup"
 	},
 	"devDependencies": {
 		"nx": "^23.0.0",

@@ -34,13 +34,13 @@ pipeline.
 npx nx run pushfold:build-headsup-wasm
 
 # or equivalently, standalone:
-./scripts/build-headsup.sh
+./scripts/build-pushfold.sh headsup
 # which is:
 cargo build --release --target=wasm32-unknown-unknown --manifest-path pushfold/Cargo.toml -p pushfold-headsup
 wasm-bindgen pushfold/target/wasm32-unknown-unknown/release/pushfold_headsup.wasm --out-dir liuran/src/lib/pkg/headsup
 ```
 
-Three-way follows the same shape via `scripts/build-threeway.sh` /
+Three-way follows the same shape via `scripts/build-pushfold.sh threeway` /
 `npx nx run pushfold:build-threeway-wasm`, emitting into
 `liuran/src/lib/pkg/threeway`.
 

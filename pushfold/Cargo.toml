@@ -17,6 +17,14 @@ criterion = "0.8.2"
 [profile.release]
 lto = true
 strip = true
+# Force a single codegen unit so the emitted wasm is byte-reproducible across
+# host platforms. With the default (16), rustc partitions monomorphizations
+# into codegen units whose ordering isn't stable between a macOS dev machine
+# and CI's Linux runner; that reshuffles the function/elem/code sections and
+# breaks the committed-artifact check even though the toolchain is identical.
+# The three-way solver (many generic instantiations over the generated tables)
+# is what exposed it. One CGU removes the partitioning variable entirely.
+codegen-units = 1
 
 # The three-way solver's tests contract 169^3 tensors every CFR iteration,
 # which is unusably slow without optimization, so test builds keep it on.

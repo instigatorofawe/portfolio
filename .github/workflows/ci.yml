@@ -213,23 +213,32 @@ jobs:
       # with an identical toolchain. This dumps exactly what diverged — byte
       # offset, embedded path strings, and the runner's paths — so we can tell a
       # path leak (fixable via --remap-path-prefix) from genuine codegen drift.
+      # Both solvers are inspected: either binary can drift independently, and
+      # checking only one hides a divergence in the other behind a false all-clear.
       - name: Diagnose wasm divergence
         if: failure() && steps.verify_clean.outcome == 'failure'
         run: |
-          WASM=liuran/src/lib/pkg/headsup/pushfold_headsup_bg.wasm
-          git show HEAD:"$WASM" > /tmp/committed.wasm
           echo "== runner paths =="
           echo "CARGO_HOME=${CARGO_HOME:-<unset>}  HOME=$HOME  RUSTFLAGS=${RUSTFLAGS:-<unset>}"
-          echo "== size / sha256 (committed vs built) =="
-          ls -l /tmp/committed.wasm "$WASM"
-          sha256sum /tmp/committed.wasm "$WASM"
-          echo "== first 20 differing bytes (offset value-committed value-built) =="
-          cmp -l /tmp/committed.wasm "$WASM" | head -20 || true
-          echo "== embedded path strings: committed (<) vs built (>) =="
-          diff \
-            <(strings /tmp/committed.wasm | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
-            <(strings "$WASM"            | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
-            || true
+          for WASM in \
+            liuran/src/lib/pkg/headsup/pushfold_headsup_bg.wasm \
+            liuran/src/lib/pkg/threeway/pushfold_threeway_bg.wasm; do
+            echo "::group::$WASM"
+            committed="$(mktemp)"
+            git show HEAD:"$WASM" > "$committed"
+            echo "== size / sha256 (committed vs built) =="
+            ls -l "$committed" "$WASM"
+            sha256sum "$committed" "$WASM"
+            echo "== first 20 differing bytes (offset value-committed value-built) =="
+            cmp -l "$committed" "$WASM" | head -20 || true
+            echo "== embedded path strings: committed (<) vs built (>) =="
+            diff \
+              <(strings "$committed" | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
+              <(strings "$WASM"      | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
+              || true
+            rm -f "$committed"
+            echo "::endgroup::"
+          done
 
       # Hand the built site to the deploy job. include-hidden-files matters:
       # the artifact must keep .nojekyll, or GitHub Pages runs Jekyll and
