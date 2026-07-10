@@ -261,9 +261,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: pnpm/action-setup@v6
+
       - uses: actions/setup-node@v6
         with:
           node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download site artifact
         uses: actions/download-artifact@v8
@@ -282,5 +289,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
-        working-directory: liuran
-        run: npx gh-pages -d build -t -r git@github.com:instigatorofawe/instigatorofawe.github.io.git
+        run: pnpm run deploy
