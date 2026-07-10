@@ -22,10 +22,11 @@
 		"test": "pnpm -C liuran test",
 		"test:unit": "pnpm -C liuran test:unit",
 		"test:e2e": "pnpm -C liuran test:e2e",
-		"build:pushfold": "./scripts/build-pushfold.sh headsup"
+		"build:pushfold": "./scripts/build-pushfold.sh headsup",
+		"deploy": "gh-pages -d liuran/build -t -r git@github.com:instigatorofawe/instigatorofawe.github.io.git"
 	},
 	"devDependencies": {
-		"nx": "^23.0.2",
-		"typescript": "^7.0.2"
+		"gh-pages": "^6.3.0",
+		"nx": "^23.0.2"
 	}
 }
