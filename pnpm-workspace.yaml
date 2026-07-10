@@ -1,7 +1,12 @@
+packages:
+  - liuran
+
 allowBuilds:
   nx: true
-# Allow nx's install script to run (pnpm blocks dependency build scripts by
-# default). Settings live here in pnpm 10+; the `pnpm` field in package.json is
-# no longer read.
+  esbuild: true
+# Allow install scripts to run (pnpm blocks dependency build scripts by
+# default): nx for the root task runner, esbuild for the liuran app. Settings
+# live here in pnpm 10+; the `pnpm` field in package.json is no longer read.
 onlyBuiltDependencies:
   - nx
+  - esbuild
