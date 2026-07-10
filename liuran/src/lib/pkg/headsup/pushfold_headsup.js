@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./pushfold_headsup_bg.js";
 __wbg_set_wasm(wasm);
 
 export {
-    HeadsUpSolver, SolverError, Strategies
+    HeadsUpSolver, Strategies
 } from "./pushfold_headsup_bg.js";

@@ -10,12 +10,138 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# The jobs below run in parallel. That is safe because every generated
+# artifact the web jobs import (liuran/src/lib/pkg, liuran/src/lib/generated,
+# the Rust lookup tables) is committed: lint/test jobs run straight off the
+# checkout, while the `build` job independently regenerates the full
+# pipeline and fails if the committed artifacts have drifted. `deploy` waits
+# for all of them, so nothing ships unless the committed artifacts are both
+# valid (tests) and in sync (build).
 jobs:
+  # Fast quality gates: type-check and lint the web app. Kept separate from
+  # the test jobs so style/type failures report in ~a minute instead of
+  # after a full build.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      # Also runs liuran's `prepare` (svelte-kit sync), which generates the
+      # .svelte-kit/tsconfig.json that check and eslint's projectService need.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+  # Web unit + e2e tests, running against the committed WASM bindings. The
+  # e2e suite builds the app itself via Playwright's `webServer` (see
+  # liuran/playwright.config.ts), so this job needs no Rust or C++ toolchain.
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # One chromium install serves both vitest's browser mode and Playwright.
+      - name: Install Playwright (chromium)
+        run: pnpm -C liuran exec playwright install --with-deps chromium
+
+      - name: Unit tests
+        run: pnpm -C liuran test:unit --run --passWithNoTests
+
+      # Smoke-tests the production build via Playwright's preview webServer.
+      # Chromium was installed above; run the suite directly to avoid the
+      # redundant `playwright install` baked into the test:e2e script.
+      - name: E2E smoke tests
+        run: pnpm -C liuran exec playwright test
+
+  # Exercises the Rust solvers against the committed generated tables, so no
+  # C++ generator (or wasm toolchain) is needed here.
+  test-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Pinned (not @stable) so the toolchain matches rust-toolchain.toml.
+      # Bump together with rust-toolchain.toml and the `build` job on upgrade.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.96.0
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pushfold
+
+      - name: Rust tests
+        run: cargo test --manifest-path pushfold/Cargo.toml
+
+  # Builds the C++ lookup generator standalone and runs its gtest suite via
+  # ctest. Configuring with `-S lookups` makes it the top-level project, which
+  # is what enables the test target (PROJECT_IS_TOP_LEVEL).
+  test-cpp:
+    runs-on: ubuntu-latest
+    env:
+      # lookups/src/headsup/generate.cpp uses C++23 <print>, which needs GCC
+      # 14's libstdc++. Point CMake at it via the standard CC/CXX env vars.
+      CC: gcc-14
+      CXX: g++-14
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install GCC 14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
+
+      # test:cpp only invokes cmake/ctest, so pnpm is needed just to run the
+      # script (keeping the command's single definition in package.json); no
+      # `pnpm install` required.
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: C++ tests
+        run: pnpm test:cpp
+
+  # The full Nx pipeline: C++ lookup generation -> heads-up WASM -> app. Its
+  # job here is twofold: prove the pipeline still builds from source, and
+  # verify the committed generated artifacts (which every other job consumed)
+  # match what the sources produce.
   build:
     runs-on: ubuntu-latest
     env:
-      # lookups/src/headsup/generate.cpp uses C++23 <print>, which needs GCC 14's
-      # libstdc++. Point CMake at it via the standard CC/CXX env vars.
+      # lookups/src/headsup/generate.cpp uses C++23 <print>, which needs GCC
+      # 14's libstdc++. Point CMake at it via the standard CC/CXX env vars.
       CC: gcc-14
       CXX: g++-14
     steps:
@@ -32,12 +158,13 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # Pinned (not @stable) so the toolchain matches rust-toolchain.toml and the
-      # committed wasm stays byte-reproducible. Bump both together on upgrade.
+      # Pinned (not @stable) so CI builds the wasm with the same toolchain as
+      # rust-toolchain.toml / local dev. Bump together with rust-toolchain.toml
+      # and the `test-rust` job on upgrade.
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.96.0
         with:
@@ -56,7 +183,7 @@ jobs:
           tool: wasm-bindgen-cli@0.2.125
 
       - name: Cache Nx
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .nx/cache
           key: nx-${{ runner.os }}-${{ github.sha }}
@@ -66,91 +193,71 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Runs the full Nx pipeline: lookups -> wasm -> app. This also produces
-      # liuran/src/lib/pkg, which the check/lint/test steps below import.
       - name: Build
         run: pnpm build
 
-      # Generated files that are committed (e.g. lookup tables) must stay in
-      # sync with their sources. If the build rewrote any tracked file, fail and
-      # show what changed so it can be regenerated and committed.
+      # Generated files that are committed (e.g. lookup tables, the wasm-bindgen
+      # JS/.d.ts glue) must stay in sync with their sources. If the build rewrote
+      # any tracked file, fail and show what changed so it can be regenerated and
+      # committed.
+      #
+      # The compiled *_bg.wasm binaries are excluded from this check. They are not
+      # byte-reproducible across host platforms — rustc/LLVM order monomorphizations
+      # differently on a macOS dev machine vs CI's Linux runner, which reshuffles the
+      # function/elem/code sections even with an identical toolchain — so a Linux CI
+      # build will never match a macOS-committed binary. They are also not what ships:
+      # `deploy` serves the wasm this job rebuilds, and the committed copies exist only
+      # so the toolchain-free lint/test-web jobs and `pnpm dev` can run off the
+      # checkout. The tracked JS/.d.ts glue still guards the exported API surface, so
+      # a Rust API change that wasn't regenerated still fails here.
       - name: Verify build did not modify tracked files
         id: verify_clean
         run: |
-          if ! git diff --exit-code; then
+          if ! git diff --exit-code -- . ':(exclude,glob)**/*_bg.wasm'; then
             echo "::error::The build modified tracked files. Regenerate and commit them, or stop tracking generated output."
             exit 1
           fi
 
-      # Only runs when the verify step above found a diff. The generated wasm is
-      # the usual culprit: rustc bakes absolute build paths into panic-location
-      # strings, so a binary built here can differ from the committed one even
-      # with an identical toolchain. This dumps exactly what diverged — byte
-      # offset, embedded path strings, and the runner's paths — so we can tell a
-      # path leak (fixable via --remap-path-prefix) from genuine codegen drift.
-      - name: Diagnose wasm divergence
-        if: failure() && steps.verify_clean.outcome == 'failure'
-        run: |
-          WASM=liuran/src/lib/pkg/headsup/pushfold_headsup_bg.wasm
-          git show HEAD:"$WASM" > /tmp/committed.wasm
-          echo "== runner paths =="
-          echo "CARGO_HOME=${CARGO_HOME:-<unset>}  HOME=$HOME  RUSTFLAGS=${RUSTFLAGS:-<unset>}"
-          echo "== size / sha256 (committed vs built) =="
-          ls -l /tmp/committed.wasm "$WASM"
-          sha256sum /tmp/committed.wasm "$WASM"
-          echo "== first 20 differing bytes (offset value-committed value-built) =="
-          cmp -l /tmp/committed.wasm "$WASM" | head -20 || true
-          echo "== embedded path strings: committed (<) vs built (>) =="
-          diff \
-            <(strings /tmp/committed.wasm | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
-            <(strings "$WASM"            | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
-            || true
-
-      - name: Type-check
-        run: pnpm check
-
-      - name: Lint
-        run: pnpm lint
-
-      # The C++ test target lives behind PROJECT_IS_TOP_LEVEL, which is set by the
-      # `cmake -S lookups` configure the Build step already ran for code
-      # generation. test:cpp reconfigures (a no-op here) so it also works
-      # standalone, then builds and runs the gtest suite via ctest.
-      - name: C++ tests
-        run: pnpm test:cpp
-
-      # Exercises the Rust solver against the committed generated tables that the
-      # Build step regenerated above.
-      - name: Rust tests
-        run: pnpm test:rust
-
-      - name: Install Playwright (chromium)
-        run: pnpm -C liuran exec playwright install --with-deps chromium
-
-      - name: Unit tests
-        run: pnpm -C liuran test:unit --run --passWithNoTests
-
-      # Smoke-tests the production build via Playwright's preview webServer.
-      # Chromium was installed above; run the suite directly to avoid the
-      # redundant `playwright install` baked into the test:e2e script.
-      - name: E2E smoke tests
-        run: pnpm -C liuran exec playwright test
-
-      # Everything below only runs once all stages above have passed, and only
-      # for pushes to main (never for pull requests).
-      - name: Set up SSH for deploy
+      # Hand the built site to the deploy job. include-hidden-files matters:
+      # the artifact must keep .nojekyll, or GitHub Pages runs Jekyll and
+      # drops SvelteKit's _app/ directory.
+      - name: Upload site artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: liuran/build
+          include-hidden-files: true
+
+  # Deploys the site the `build` job produced, and only once every gate above
+  # has passed — and only for pushes to main (never for pull requests).
+  deploy:
+    needs: [lint, test-web, test-rust, test-cpp, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Download site artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: site
+          path: liuran/build
+
+      - name: Set up SSH for deploy
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Configure git identity for deploy
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: liuran
         run: npx gh-pages -d build -t -r git@github.com:instigatorofawe/instigatorofawe.github.io.git

@@ -8,17 +8,10 @@ const BU: usize = 0;
 const SB: usize = 1;
 const BB: usize = 2;
 
-/// Input validation errors
-#[wasm_bindgen]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SolverError {
-    NonFiniteInput,
-    StackNotPositive,
-    NegativeBlindOrAnte,
-    SmallBlindExceedsStack,
-    BigBlindExceedsStack,
-    ZeroIterations,
-}
+// The shared error type (see pushfold_shared for why it is not a
+// `#[wasm_bindgen]` enum); re-exported so this crate's public API keeps a
+// local path to its error type.
+pub use pushfold_shared::SolverError;
 
 /// Solver result: the six averaged strategies, one per decision point.
 #[wasm_bindgen]
@@ -302,8 +295,30 @@ impl ThreewaySolver {
     /// caller can render a progress indicator. Reported at most ~100 times
     /// regardless of `iterations`, so the callback overhead stays negligible
     /// next to the O(N^3) work it's interleaved with.
+    ///
+    /// Thin boundary wrapper: rejected inputs surface to JS as an `Error`
+    /// whose message is the `SolverError` `Display` string. The typed result
+    /// lives in `solve_inner`, which tests exercise natively (a `JsError` can
+    /// neither be constructed nor `Debug`-printed off-wasm).
     #[allow(clippy::too_many_arguments)]
     pub fn solve(
+        &mut self,
+        stack_bu: f32,
+        stack_sb: f32,
+        stack_bb: f32,
+        sb: f32,
+        ante: f32,
+        iterations: u32,
+        progress: Option<js_sys::Function>,
+    ) -> Result<Strategies, JsError> {
+        Ok(self.solve_inner(stack_bu, stack_sb, stack_bb, sb, ante, iterations, progress)?)
+    }
+}
+
+impl ThreewaySolver {
+    /// `solve` with the typed error; see the wasm wrapper above.
+    #[allow(clippy::too_many_arguments)]
+    fn solve_inner(
         &mut self,
         stack_bu: f32,
         stack_sb: f32,
@@ -683,7 +698,7 @@ mod tests {
 
     fn solve(solver: &mut ThreewaySolver, stacks: [f32; 3], iterations: u32) -> Strategies {
         solver
-            .solve(
+            .solve_inner(
                 stacks[BU],
                 stacks[SB],
                 stacks[BB],

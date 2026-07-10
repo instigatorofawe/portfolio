@@ -2,18 +2,6 @@
 /* eslint-disable */
 
 /**
- * Input validation errors
- */
-export enum SolverError {
-    NonFiniteInput = 0,
-    StackNotPositive = 1,
-    NegativeBlindOrAnte = 2,
-    SmallBlindExceedsStack = 3,
-    BigBlindExceedsStack = 4,
-    ZeroIterations = 5,
-}
-
-/**
  * Solver result: the six averaged strategies, one per decision point.
  */
 export class Strategies {
@@ -60,6 +48,11 @@ export class ThreewaySolver {
      * caller can render a progress indicator. Reported at most ~100 times
      * regardless of `iterations`, so the callback overhead stays negligible
      * next to the O(N^3) work it's interleaved with.
+     *
+     * Thin boundary wrapper: rejected inputs surface to JS as an `Error`
+     * whose message is the `SolverError` `Display` string. The typed result
+     * lives in `solve_inner`, which tests exercise natively (a `JsError` can
+     * neither be constructed nor `Debug`-printed off-wasm).
      */
     solve(stack_bu: number, stack_sb: number, stack_bb: number, sb: number, ante: number, iterations: number, progress?: Function | null): Strategies;
 }

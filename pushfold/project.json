@@ -14,11 +14,11 @@
 				"{projectRoot}/Cargo.lock",
 				"{projectRoot}/shared/**/*",
 				"{projectRoot}/headsup/**/*",
-				"{workspaceRoot}/scripts/build-headsup.sh"
+				"{workspaceRoot}/scripts/build-pushfold.sh"
 			],
 			"outputs": ["{workspaceRoot}/liuran/src/lib/pkg/headsup"],
 			"options": {
-				"command": "./scripts/build-headsup.sh"
+				"command": "./scripts/build-pushfold.sh headsup"
 			}
 		},
 		"build-threeway-wasm": {
@@ -32,11 +32,11 @@
 				"{projectRoot}/Cargo.lock",
 				"{projectRoot}/shared/**/*",
 				"{projectRoot}/threeway/**/*",
-				"{workspaceRoot}/scripts/build-threeway.sh"
+				"{workspaceRoot}/scripts/build-pushfold.sh"
 			],
 			"outputs": ["{workspaceRoot}/liuran/src/lib/pkg/threeway"],
 			"options": {
-				"command": "./scripts/build-threeway.sh"
+				"command": "./scripts/build-pushfold.sh threeway"
 			}
 		}
 	}
