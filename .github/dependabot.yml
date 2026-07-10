@@ -1,0 +1,56 @@
+# Weekly dependency update PRs. Each PR runs the full CI matrix, so a bad
+# bump is caught by the same gates as any other change.
+version: 2
+updates:
+  # Both package.json manifests share the root pnpm-lock.yaml; listing both
+  # directories lets Dependabot update either manifest against that lockfile.
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/liuran"
+    schedule:
+      interval: weekly
+    # Collapse routine bumps into one PR; majors still arrive individually
+    # since they may need real migration work.
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Cargo workspace root; member crates inherit versions via
+  # [workspace.dependencies], so this one manifest covers all of them.
+  #
+  # Two caveats for reviewing these PRs:
+  # - wasm-bindgen is excluded below: its crate version must match the
+  #   wasm-bindgen-cli version pinned in ci.yml (the build fails on any
+  #   mismatch), so bump both together by hand.
+  # - Any dependency bump changes the compiled solver, so the committed wasm
+  #   in liuran/src/lib/pkg/ must be regenerated (pnpm build:wasm and
+  #   build:wasm:threeway) and pushed to the PR branch, or the build job's
+  #   drift check will fail.
+  - package-ecosystem: cargo
+    directory: "/pushfold"
+    schedule:
+      interval: weekly
+    groups:
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: wasm-bindgen
+
+  # Action versions in ci.yml. The pinned Rust toolchain action
+  # (dtolnay/rust-toolchain@1.96.0) uses its tag to select the toolchain
+  # version; treat bumps to it as toolchain upgrades (update
+  # rust-toolchain.toml in the same PR), not routine action updates.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch
