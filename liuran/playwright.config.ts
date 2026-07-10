@@ -9,7 +9,7 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	use: { baseURL: `http://localhost:${PORT}` },
 	webServer: {
-		command: 'npm run build && npm run preview',
+		command: 'pnpm build && pnpm preview',
 		port: PORT,
 		// Locally, reuse an already-running `preview` server instead of rebuilding.
 		reuseExistingServer: !process.env.CI

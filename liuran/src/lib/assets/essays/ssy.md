@@ -1,6 +1,6 @@
-# Humanity in *Shin Sekai Yori*: Defined by Emotion, Empathy, and the Subconscious Mind
+# Humanity in _Shin Sekai Yori_: Defined by Emotion, Empathy, and the Subconscious Mind
 
-The central contemplation of *Shin Sekai Yori* (*From the New World*) is on the nature of humanity. A thousand years in the
+The central contemplation of _Shin Sekai Yori_ (_From the New World_) is on the nature of humanity. A thousand years in the
 future, two sapient races walk the earth: humans and queerats. Both are descended from present-day humanity, yet both
 are inexorably different from what we know as human. Both races are the result of genetic manipulation. Queerats are
 grotesque in appearance, live underground in hives, and have an insectoid societal hierarchy. Humans possess cantus,
@@ -23,7 +23,7 @@ human race, there are still perils in the present age that arise from within. Th
 loomed over us for the past decades, requiring only that those vast destructive powers fall into the wrong hands for the
 world to be doomed. The existence of cantus serves to amplify these dangers, for all people with cantus are thus
 empowered, and hence, one person lacking compunction or restraint can wreak destruction limited only by their
-imagination. In *Shin Sekai Yori*, the emergence of cantus is what causes the collapse of modern society, and afterwards
+imagination. In _Shin Sekai Yori_, the emergence of cantus is what causes the collapse of modern society, and afterwards
 plunges humanity into centuries of violence. Tomiko tells Saki that the only things which humans must fear are karma
 demons and fiends: other humans, unable or unwilling to restrain their power.
 
@@ -57,7 +57,7 @@ development.
 Just as genetic variation can result in the emergence of new species distinct in form from their predecessors, changes
 in human thought can also effect a certain distinctness. With the emergence of cantus, the technologies which once
 served to translate human thought into material change are made obsolete, and thus, human society regresses in
-development to a more pastoral way of life. The values of human society in *Shin Sekai Yori* are distinct from that of
+development to a more pastoral way of life. The values of human society in _Shin Sekai Yori_ are distinct from that of
 modern society, also. Romantic bonds are an instrument for preserving peace and harmony, and thus the attitude of humans
 towards sexuality differ from our modern values; adolescents are encouraged to pair with someone of the same gender in
 order to mitigate the risk of unwanted pregnancies. Children, ordinarily regarded as a sign of hope and innocence, a
@@ -148,7 +148,7 @@ of mercy, does not quite restore him to humanity: even animals are put out of th
 that to allow his continued suffering would be wrong.
 
 To recognize humanity, then, is to be able to conceive of another’s consciousness as being similar to one’s own.
-Humanity in *Shin Sekai Yori* is something which can be granted and withheld; its presence or absence can be determined
+Humanity in _Shin Sekai Yori_ is something which can be granted and withheld; its presence or absence can be determined
 by circumstance or perspective. Different aspects of consciousness, which itself is a complex and multifaceted quality,
 may render another more or less recognizable as human, yet ultimately it falls to the subject to decide where the line
 is drawn, defined by one’s capacity for empathy.

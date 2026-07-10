@@ -1,6 +1,6 @@
-# Kant and Conscience, Moral Confusion and the *Kingdom of Heaven*
+# Kant and Conscience, Moral Confusion and the _Kingdom of Heaven_
 
-The director’s cut of Ridley Scott’s 2005 film *Kingdom of Heaven* restores nearly an hour of cut footage, and transforms
+The director’s cut of Ridley Scott’s 2005 film _Kingdom of Heaven_ restores nearly an hour of cut footage, and transforms
 a confusing, action-centric theatrical narrative into a more philosophically ambitious meditation on faith, morality,
 and personal responsibility. Despite its ostensible setting in the High Middle Ages, however, the film’s ideology is
 unmistakably postmodern. Its leaders and institutions are fundamentally corrupt and morally bankrupt, except for the
@@ -15,7 +15,7 @@ away without consequence when he returns with Sibylla to his village in France, 
 of atonement for crusaders that the film earlier treated with skepticism. Ultimately, the extended film’s broader
 philosophical scope reveals an unresolved moral confusion rather than any coherent guiding principle.
 
-Organized religion and institutions in general are cynically portrayed in *Kingdom of Heaven*. At the beginning of the
+Organized religion and institutions in general are cynically portrayed in _Kingdom of Heaven_. At the beginning of the
 film, Balian’s wife has died. His brother is the village priest, who embezzles money meant to pay for her funeral,
 steals a gold cross from her body, and orders her corpse beheaded out of spite. He abuses his position of religious
 authority; rather than providing guidance and consolation, he tells Balian that his wife is in hell, hoping to drive
@@ -46,7 +46,7 @@ Conversely, upon being knighted by Godfrey shortly before his death, Balian take
 charged to: “Be without fear in the face of your enemies. / Be brave and upright, that God may love thee. / Speak the
 truth always, even if it leads to your death. / Safeguard the helpless and do no wrong.” For the most part, he upholds
 these values: most notably, he protects the civilians of Kerak at the risk of his own life and that of his men at arms;
-later, he personally organizes the defense of Jerusalem. Yet knighthood in *Kingdom of Heaven* is somewhat subverted as
+later, he personally organizes the defense of Jerusalem. Yet knighthood in _Kingdom of Heaven_ is somewhat subverted as
 merely a social construct, albeit a useful fiction with the power to influence people’s behavior. Balian personally
 knights many of the levied defenders of Jerusalem to raise their morale, over the protests of the Patriarch. The film’s
 intent is to portray these knightly oaths as an intermediate stage on a journey of moral development. This broadly
@@ -98,7 +98,7 @@ while borrowing the veneer of moral development and reasoned universality.
 
 Perhaps in a secular modern age, one’s conscience is in fact the final arbiter of one’s actions. But the Nietzschean
 consequence is that to proceed without divine guidance is to compel every individual to construct and continually defend
-for themselves a new system of values. *Kingdom of Heaven* on the other hand presents subjective conscience as
+for themselves a new system of values. _Kingdom of Heaven_ on the other hand presents subjective conscience as
 self-confirming and the absolute conclusion of moral development. It takes the universality and correctness of its
 viewpoint as axiom and invites its audience to nod uncritically in agreement. In the process, it justifies the
 reprehensible as sophistication, portrays caricatures of its opposition, and ultimately buries rather than resolves the
