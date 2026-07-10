@@ -162,9 +162,9 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # Pinned (not @stable) so the toolchain matches rust-toolchain.toml and
-      # the committed wasm stays byte-reproducible. Bump together with
-      # rust-toolchain.toml and the `test-rust` job on upgrade.
+      # Pinned (not @stable) so CI builds the wasm with the same toolchain as
+      # rust-toolchain.toml / local dev. Bump together with rust-toolchain.toml
+      # and the `test-rust` job on upgrade.
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.96.0
         with:
@@ -196,49 +196,27 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # Generated files that are committed (e.g. lookup tables) must stay in
-      # sync with their sources. If the build rewrote any tracked file, fail and
-      # show what changed so it can be regenerated and committed.
+      # Generated files that are committed (e.g. lookup tables, the wasm-bindgen
+      # JS/.d.ts glue) must stay in sync with their sources. If the build rewrote
+      # any tracked file, fail and show what changed so it can be regenerated and
+      # committed.
+      #
+      # The compiled *_bg.wasm binaries are excluded from this check. They are not
+      # byte-reproducible across host platforms — rustc/LLVM order monomorphizations
+      # differently on a macOS dev machine vs CI's Linux runner, which reshuffles the
+      # function/elem/code sections even with an identical toolchain — so a Linux CI
+      # build will never match a macOS-committed binary. They are also not what ships:
+      # `deploy` serves the wasm this job rebuilds, and the committed copies exist only
+      # so the toolchain-free lint/test-web jobs and `pnpm dev` can run off the
+      # checkout. The tracked JS/.d.ts glue still guards the exported API surface, so
+      # a Rust API change that wasn't regenerated still fails here.
       - name: Verify build did not modify tracked files
         id: verify_clean
         run: |
-          if ! git diff --exit-code; then
+          if ! git diff --exit-code -- . ':(exclude,glob)**/*_bg.wasm'; then
             echo "::error::The build modified tracked files. Regenerate and commit them, or stop tracking generated output."
             exit 1
           fi
-
-      # Only runs when the verify step above found a diff. The generated wasm is
-      # the usual culprit: rustc bakes absolute build paths into panic-location
-      # strings, so a binary built here can differ from the committed one even
-      # with an identical toolchain. This dumps exactly what diverged — byte
-      # offset, embedded path strings, and the runner's paths — so we can tell a
-      # path leak (fixable via --remap-path-prefix) from genuine codegen drift.
-      # Both solvers are inspected: either binary can drift independently, and
-      # checking only one hides a divergence in the other behind a false all-clear.
-      - name: Diagnose wasm divergence
-        if: failure() && steps.verify_clean.outcome == 'failure'
-        run: |
-          echo "== runner paths =="
-          echo "CARGO_HOME=${CARGO_HOME:-<unset>}  HOME=$HOME  RUSTFLAGS=${RUSTFLAGS:-<unset>}"
-          for WASM in \
-            liuran/src/lib/pkg/headsup/pushfold_headsup_bg.wasm \
-            liuran/src/lib/pkg/threeway/pushfold_threeway_bg.wasm; do
-            echo "::group::$WASM"
-            committed="$(mktemp)"
-            git show HEAD:"$WASM" > "$committed"
-            echo "== size / sha256 (committed vs built) =="
-            ls -l "$committed" "$WASM"
-            sha256sum "$committed" "$WASM"
-            echo "== first 20 differing bytes (offset value-committed value-built) =="
-            cmp -l "$committed" "$WASM" | head -20 || true
-            echo "== embedded path strings: committed (<) vs built (>) =="
-            diff \
-              <(strings "$committed" | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
-              <(strings "$WASM"      | grep -E '^/|\.rs$|cargo|rustc|registry|crates' | sort -u) \
-              || true
-            rm -f "$committed"
-            echo "::endgroup::"
-          done
 
       # Hand the built site to the deploy job. include-hidden-files matters:
       # the artifact must keep .nojekyll, or GitHub Pages runs Jekyll and
