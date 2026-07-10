@@ -18,6 +18,11 @@ export class HeadsUpSolver {
     /**
      * Runs CFR+ (regret clamping, alternating updates, linear averaging)
      * and returns the averaged strategies with their exploitability.
+     *
+     * Thin boundary wrapper: rejected inputs surface to JS as an `Error`
+     * whose message is the `SolverError` `Display` string. The typed result
+     * lives in `solve_inner`, which tests exercise natively (a `JsError` can
+     * neither be constructed nor `Debug`-printed off-wasm).
      * @param {number} stack
      * @param {number} sb
      * @param {number} ante
@@ -41,18 +46,6 @@ export class HeadsUpSolver {
     }
 }
 if (Symbol.dispose) HeadsUpSolver.prototype[Symbol.dispose] = HeadsUpSolver.prototype.free;
-
-/**
- * Input validation errors
- * @enum {0 | 1 | 2 | 3 | 4}
- */
-export const SolverError = Object.freeze({
-    NonFiniteInput: 0, "0": "NonFiniteInput",
-    StackNotPositive: 1, "1": "StackNotPositive",
-    NegativeBlindOrAnte: 2, "2": "NegativeBlindOrAnte",
-    SmallBlindExceedsStack: 3, "3": "SmallBlindExceedsStack",
-    ZeroIterations: 4, "4": "ZeroIterations",
-});
 
 /**
  * Solver result
@@ -115,13 +108,12 @@ export class Strategies {
     }
 }
 if (Symbol.dispose) Strategies.prototype[Symbol.dispose] = Strategies.prototype.free;
+export function __wbg_Error_fdd633d4bb5dd76a(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
+    return addHeapObject(ret);
+}
 export function __wbg___wbindgen_throw_ea4887a5f8f9a9db(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
-}
-export function __wbindgen_cast_0000000000000001(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
-    return addHeapObject(ret);
 }
 const HeadsUpSolverFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }

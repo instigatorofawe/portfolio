@@ -92,7 +92,9 @@
 			// rather than silently blank the grid. The previous solution stays on
 			// screen so the user keeps a reference point.
 			console.error('solver rejected inputs', e);
-			solveError = String(e);
+			// The Rust wrapper throws a real Error whose message is the
+			// SolverError Display string; show that, not "Error: …".
+			solveError = e instanceof Error ? e.message : String(e);
 		}
 	}
 

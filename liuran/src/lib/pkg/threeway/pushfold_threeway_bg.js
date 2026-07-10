@@ -1,17 +1,4 @@
 /**
- * Input validation errors
- * @enum {0 | 1 | 2 | 3 | 4 | 5}
- */
-export const SolverError = Object.freeze({
-    NonFiniteInput: 0, "0": "NonFiniteInput",
-    StackNotPositive: 1, "1": "StackNotPositive",
-    NegativeBlindOrAnte: 2, "2": "NegativeBlindOrAnte",
-    SmallBlindExceedsStack: 3, "3": "SmallBlindExceedsStack",
-    BigBlindExceedsStack: 4, "4": "BigBlindExceedsStack",
-    ZeroIterations: 5, "5": "ZeroIterations",
-});
-
-/**
  * Solver result: the six averaged strategies, one per decision point.
  */
 export class Strategies {
@@ -181,6 +168,11 @@ export class ThreewaySolver {
      * caller can render a progress indicator. Reported at most ~100 times
      * regardless of `iterations`, so the callback overhead stays negligible
      * next to the O(N^3) work it's interleaved with.
+     *
+     * Thin boundary wrapper: rejected inputs surface to JS as an `Error`
+     * whose message is the `SolverError` `Display` string. The typed result
+     * lives in `solve_inner`, which tests exercise natively (a `JsError` can
+     * neither be constructed nor `Debug`-printed off-wasm).
      * @param {number} stack_bu
      * @param {number} stack_sb
      * @param {number} stack_bb
@@ -207,6 +199,10 @@ export class ThreewaySolver {
     }
 }
 if (Symbol.dispose) ThreewaySolver.prototype[Symbol.dispose] = ThreewaySolver.prototype.free;
+export function __wbg_Error_fdd633d4bb5dd76a(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
+    return addHeapObject(ret);
+}
 export function __wbg___wbindgen_throw_ea4887a5f8f9a9db(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }

@@ -92,7 +92,12 @@ workerSelf.onmessage = (event) => {
 		);
 	} catch (e) {
 		// The Rust layer rejected something the UI check missed; report it
-		// rather than let the worker die silently.
-		workerSelf.postMessage({ id, type: 'error', error: String(e) }, []);
+		// rather than let the worker die silently. The wasm wrapper throws a
+		// real Error whose message is the SolverError Display string; forward
+		// that, not "Error: …".
+		workerSelf.postMessage(
+			{ id, type: 'error', error: e instanceof Error ? e.message : String(e) },
+			[]
+		);
 	}
 };

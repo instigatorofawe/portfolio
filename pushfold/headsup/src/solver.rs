@@ -2,16 +2,10 @@ use crate::constants::*;
 use nalgebra::{DMatrix, DVector};
 use wasm_bindgen::prelude::*;
 
-/// Input validation errors
-#[wasm_bindgen]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SolverError {
-    NonFiniteInput,
-    StackNotPositive,
-    NegativeBlindOrAnte,
-    SmallBlindExceedsStack,
-    ZeroIterations,
-}
+// The shared error type (see pushfold_shared for why it is not a
+// `#[wasm_bindgen]` enum); re-exported so this crate's public API keeps a
+// local path to its error type. This game never emits `BigBlindExceedsStack`.
+pub use pushfold_shared::SolverError;
 
 /// Solver result
 #[wasm_bindgen]
@@ -138,7 +132,25 @@ impl HeadsUpSolver {
 
     /// Runs CFR+ (regret clamping, alternating updates, linear averaging)
     /// and returns the averaged strategies with their exploitability.
+    ///
+    /// Thin boundary wrapper: rejected inputs surface to JS as an `Error`
+    /// whose message is the `SolverError` `Display` string. The typed result
+    /// lives in `solve_inner`, which tests exercise natively (a `JsError` can
+    /// neither be constructed nor `Debug`-printed off-wasm).
     pub fn solve(
+        &mut self,
+        stack: f32,
+        sb: f32,
+        ante: f32,
+        iterations: u32,
+    ) -> Result<Strategies, JsError> {
+        Ok(self.solve_inner(stack, sb, ante, iterations)?)
+    }
+}
+
+impl HeadsUpSolver {
+    /// `solve` with the typed error; see the wasm wrapper above.
+    fn solve_inner(
         &mut self,
         stack: f32,
         sb: f32,
@@ -311,7 +323,7 @@ mod tests {
     #[test]
     fn print_strategies() {
         let mut solver = HeadsUpSolver::new();
-        let out = solver.solve(STACK, SB, ANTE, 1000).unwrap();
+        let out = solver.solve_inner(STACK, SB, ANTE, 1000).unwrap();
         println!(
             "\nConverged strategies at stack={STACK}bb sb={SB} ante={ANTE} \
              (exploitability {:.2e})",
@@ -345,7 +357,7 @@ mod tests {
     #[test]
     fn test_strategies_are_probabilities() {
         let mut solver = HeadsUpSolver::new();
-        let out = solver.solve(STACK, SB, ANTE, 200).unwrap();
+        let out = solver.solve_inner(STACK, SB, ANTE, 200).unwrap();
         for x in out.bu_push.iter().chain(out.bb_call.iter()) {
             assert!((0.0..=1.0).contains(x), "strategy out of range: {x}");
         }
@@ -357,7 +369,7 @@ mod tests {
         // push and a pure call; with no epsilon floor the average should be
         // exactly (or extremely near) 1.
         let mut solver = HeadsUpSolver::new();
-        let out = solver.solve(STACK, SB, ANTE, 1000).unwrap();
+        let out = solver.solve_inner(STACK, SB, ANTE, 1000).unwrap();
         assert!(out.bu_push[0] > 0.999, "AA push freq {}", out.bu_push[0]);
         assert!(out.bb_call[0] > 0.999, "AA call freq {}", out.bb_call[0]);
     }
@@ -365,8 +377,8 @@ mod tests {
     #[test]
     fn test_converges() {
         let mut solver = HeadsUpSolver::new();
-        let coarse = solver.solve(STACK, SB, ANTE, 100).unwrap();
-        let fine = solver.solve(STACK, SB, ANTE, 2000).unwrap();
+        let coarse = solver.solve_inner(STACK, SB, ANTE, 100).unwrap();
+        let fine = solver.solve_inner(STACK, SB, ANTE, 2000).unwrap();
         assert!(fine.exploitability >= 0.0);
         assert!(
             fine.exploitability < coarse.exploitability,

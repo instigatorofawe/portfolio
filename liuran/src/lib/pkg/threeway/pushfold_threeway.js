@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./pushfold_threeway_bg.js";
 __wbg_set_wasm(wasm);
 
 export {
-    SolverError, Strategies, ThreewaySolver
+    Strategies, ThreewaySolver
 } from "./pushfold_threeway_bg.js";

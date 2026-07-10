@@ -8,19 +8,13 @@ export class HeadsUpSolver {
     /**
      * Runs CFR+ (regret clamping, alternating updates, linear averaging)
      * and returns the averaged strategies with their exploitability.
+     *
+     * Thin boundary wrapper: rejected inputs surface to JS as an `Error`
+     * whose message is the `SolverError` `Display` string. The typed result
+     * lives in `solve_inner`, which tests exercise natively (a `JsError` can
+     * neither be constructed nor `Debug`-printed off-wasm).
      */
     solve(stack: number, sb: number, ante: number, iterations: number): Strategies;
-}
-
-/**
- * Input validation errors
- */
-export enum SolverError {
-    NonFiniteInput = 0,
-    StackNotPositive = 1,
-    NegativeBlindOrAnte = 2,
-    SmallBlindExceedsStack = 3,
-    ZeroIterations = 4,
 }
 
 /**
