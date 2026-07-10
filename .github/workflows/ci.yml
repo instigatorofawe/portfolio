@@ -92,11 +92,23 @@ jobs:
       # Bump together with rust-toolchain.toml and the `build` job on upgrade.
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.96.0
+        with:
+          components: clippy, rustfmt
 
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: pushfold
+
+      # The same commands the cargo-fmt / cargo-clippy pre-commit hooks run
+      # (.pre-commit-config.yaml); those hooks are optional local tooling, so
+      # this is what actually enforces them on every PR. Format check first:
+      # it needs no compilation, so it fails in seconds.
+      - name: Format check
+        run: cargo fmt --all --manifest-path pushfold/Cargo.toml -- --check
+
+      - name: Clippy
+        run: cargo clippy --manifest-path pushfold/Cargo.toml --all-targets -- -D warnings
 
       - name: Rust tests
         run: cargo test --manifest-path pushfold/Cargo.toml
@@ -117,7 +129,18 @@ jobs:
       - name: Install GCC 14
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14
+          sudo apt-get install -y gcc-14 g++-14 clang-format-18
+
+      # The same check the clang-format pre-commit hook runs locally; that
+      # hook is optional local tooling, so this is what actually enforces it
+      # on every PR. Pinned to the versioned apt package so a runner-image
+      # update can't silently shift the formatting rules. The local hook uses
+      # Xcode's clang-format, a different build — the shared .clang-format
+      # (Google style) has been stable across both, but if they ever
+      # disagree, this pinned version is the arbiter.
+      - name: clang-format check
+        working-directory: lookups
+        run: find include src bench \( -name '*.hpp' -o -name '*.cpp' \) -print0 | xargs -0 clang-format-18 --dry-run -Werror
 
       # test:cpp only invokes cmake/ctest, so pnpm is needed just to run the
       # script (keeping the command's single definition in package.json); no

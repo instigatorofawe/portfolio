@@ -25,7 +25,6 @@
 		"build:pushfold": "./scripts/build-pushfold.sh headsup"
 	},
 	"devDependencies": {
-		"nx": "^23.0.2",
-		"typescript": "^7.0.2"
+		"nx": "^23.0.2"
 	}
 }

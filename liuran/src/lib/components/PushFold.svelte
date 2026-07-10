@@ -24,12 +24,18 @@
 	let solver = $state<Solver | null>(null);
 
 	$effect(() => {
+		// If the component unmounts before the import resolves, the cleanup
+		// below has already run; `cancelled` stops the late resolution from
+		// constructing a solver whose WASM memory nothing would ever free.
+		let cancelled = false;
 		let instance: Solver | null = null;
 		import('$lib/pkg/headsup/pushfold_headsup').then((m) => {
+			if (cancelled) return;
 			instance = new m.HeadsUpSolver();
 			solver = instance;
 		});
 		return () => {
+			cancelled = true;
 			instance?.free();
 			solver = null;
 		};
