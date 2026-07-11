@@ -690,7 +690,7 @@ impl Default for ThreewaySolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pushfold_shared::{N_RANKS, hands};
+    use pushfold_shared::format_grid;
 
     const STACKS: [f32; 3] = [5.0, 5.0, 5.0];
     const SMALL_BLIND: f32 = 0.5;
@@ -710,23 +710,6 @@ mod tests {
             .unwrap()
     }
 
-    /// Renders a strategy vector as the 13x13 hand grid, one cell per infoset
-    /// showing the label and its action frequency as a percentage. The layout
-    /// matches a standard range chart: pairs on the diagonal, suited hands in
-    /// the upper triangle, offsuit in the lower.
-    fn format_grid(strat: &Array1<f32>) -> String {
-        let labels = hands();
-        let mut out = String::new();
-        for r in 0..N_RANKS {
-            for c in 0..N_RANKS {
-                let i = r * N_RANKS + c;
-                out.push_str(&format!("{:>4} {:>3.0}%  ", labels[i], strat[i] * 100.0));
-            }
-            out.push('\n');
-        }
-        out
-    }
-
     /// Solves at the shared stakes and prints all six converged ranges. Run
     /// with `cargo test -p pushfold-threeway print_strategies -- --nocapture`
     /// to see output.
@@ -739,20 +722,29 @@ mod tests {
              (exploitability {:.2e})",
             out.exploitability
         );
-        println!("\nButton push range:\n{}", format_grid(&out.bu_push));
-        println!("SB call-a-push range:\n{}", format_grid(&out.sb_call));
-        println!("SB open-push range:\n{}", format_grid(&out.sb_push));
+        println!(
+            "\nButton push range:\n{}",
+            format_grid(out.bu_push.as_slice().unwrap())
+        );
+        println!(
+            "SB call-a-push range:\n{}",
+            format_grid(out.sb_call.as_slice().unwrap())
+        );
+        println!(
+            "SB open-push range:\n{}",
+            format_grid(out.sb_push.as_slice().unwrap())
+        );
         println!(
             "BB call vs push + call range:\n{}",
-            format_grid(&out.bb_call_both)
+            format_grid(out.bb_call_both.as_slice().unwrap())
         );
         println!(
             "BB call vs BU push range:\n{}",
-            format_grid(&out.bb_call_bu)
+            format_grid(out.bb_call_bu.as_slice().unwrap())
         );
         println!(
             "BB call vs SB push range:\n{}",
-            format_grid(&out.bb_call_sb)
+            format_grid(out.bb_call_sb.as_slice().unwrap())
         );
     }
 
