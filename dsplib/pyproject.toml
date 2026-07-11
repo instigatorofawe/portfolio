@@ -1,0 +1,46 @@
+[build-system]
+requires = ["scikit-build-core >=0.10", "nanobind >=2.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "dsplib"
+dynamic = ["version"]
+description = "A DSP library with a header-only C++ core and nanobind bindings"
+readme = "README.md"
+requires-python = ">=3.13"
+
+[dependency-groups]
+dev = ["pyright>=1.1.390", "black>=24.0", "pytest>=8.0"]
+
+[tool.scikit-build]
+# Keep the build-time scikit-build-core in sync with the pin above.
+minimum-version = "build-system.requires"
+# Per-tag build tree so debug/release and interpreter variants don't collide.
+build-dir = "build/{wheel_tag}"
+# Ship the pure-Python package; the compiled _dsplib extension installs into it.
+wheel.packages = ["dsplib"]
+
+[tool.scikit-build.metadata.version]
+# Single source of truth: the project() VERSION in CMakeLists.txt. Read as text
+# (no import needed) so the wheel metadata can't drift from what the C++ build
+# stamps into the extension.
+provider = "scikit_build_core.metadata.regex"
+input = "CMakeLists.txt"
+regex = 'project\(\s*dsplib\s+VERSION\s+(?P<value>[0-9]+(?:\.[0-9]+)*)'
+
+[tool.pyright]
+# Pick up the .pyi stub the CMake build generates for the compiled _dsplib
+# module (stubs/dsplib/_dsplib.pyi). Without this pyright can't see the native
+# API and reports the extension as untyped.
+stubPath = "stubs"
+# The source tree ships only the stub, not the compiled _dsplib.so, so pyright
+# would flag the (correctly resolved) stub as lacking a runtime source. That's
+# expected here; silence it rather than depend on a built extension being on the
+# path for a clean editor experience.
+reportMissingModuleSource = "none"
+
+[tool.black]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

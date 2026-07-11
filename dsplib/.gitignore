@@ -1,0 +1,8 @@
+/build/
+/stubs/
+
+# Python
+__pycache__/
+*.egg-info/
+/dist/
+/.venv/
