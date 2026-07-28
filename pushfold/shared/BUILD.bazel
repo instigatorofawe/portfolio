@@ -1,0 +1,65 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+exports_files(["Cargo.toml"])
+
+# rustc resolves `mod` paths relative to the crate root's own location, so the
+# crate needs a single source root. The headsup tables are generated into
+# bazel-out, so the hand-written sources are copied there to join them.
+copy_to_bin(
+    name = "handwritten_srcs",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/generated/headsup/**"],
+    ),
+)
+
+# Re-roots //lookups:headsup_lookups from lookups/headsup/ to this crate's
+# src/generated/headsup/, where generated/mod.rs expects the submodule.
+genrule(
+    name = "generated_headsup",
+    srcs = ["//lookups:headsup_lookups"],
+    outs = [
+        "src/generated/headsup/hands.rs",
+        "src/generated/headsup/headsup_equity.rs",
+        "src/generated/headsup/headsup_matchup.rs",
+        "src/generated/headsup/mod.rs",
+    ],
+    cmd = """
+mkdir -p $(RULEDIR)/src/generated/headsup
+for f in $(SRCS); do cp $$f $(RULEDIR)/src/generated/headsup/; done
+""",
+)
+
+rust_library(
+    name = "pushfold_shared",
+    srcs = [
+        ":generated_headsup",
+        ":handwritten_srcs",
+    ],
+    crate_features = [],
+    crate_name = "pushfold_shared",
+    edition = "2024",
+    visibility = ["//visibility:public"],
+)
+
+# The `hands` grid is dev-only reference data (see Cargo.toml); the solvers'
+# tests enable it, the WASM build does not.
+rust_library(
+    name = "pushfold_shared_with_hands",
+    srcs = [
+        ":generated_headsup",
+        ":handwritten_srcs",
+    ],
+    crate_features = ["hands"],
+    crate_name = "pushfold_shared",
+    edition = "2024",
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "pushfold_shared_test",
+    size = "small",
+    crate = ":pushfold_shared_with_hands",
+    edition = "2024",
+)

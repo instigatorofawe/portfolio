@@ -1,0 +1,8 @@
+node_modules
+liuran/node_modules
+liuran/.svelte-kit
+liuran/build
+liuran/test-results
+lookups/build
+pushfold/target
+.nx

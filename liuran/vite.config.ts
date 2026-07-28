@@ -18,6 +18,15 @@ export default defineConfig({
 	define: {
 		__LAST_COMMIT_DATE__: JSON.stringify(lastCommitDate)
 	},
+	resolve: {
+		// Bazel stages action inputs as symlinks into a sandbox. Rolldown
+		// normally resolves those to their real paths, which keys the build
+		// manifest by '../../../execroot/...' while SvelteKit looks modules up
+		// by their in-project path ('src/routes/+layout.svelte') and fails.
+		// Only set under Bazel: pnpm's node_modules are symlinks too, and
+		// preserving those would break dependency deduplication.
+		preserveSymlinks: process.env.BAZEL_VITE_PRESERVE_SYMLINKS === '1'
+	},
 	worker: {
 		// Vite's default worker output ('iife') can't express the top-level
 		// await vite-plugin-wasm emits to instantiate the .wasm module; the

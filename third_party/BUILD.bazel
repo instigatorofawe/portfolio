@@ -1,0 +1,21 @@
+load("@rules_rust_wasm_bindgen//:defs.bzl", "rust_wasm_bindgen_toolchain")
+
+# Pins the wasm-bindgen CLI to 0.2.125 to match the wasm-bindgen crate in
+# pushfold/Cargo.toml. The CLI refuses to run against a mismatched crate.
+rust_wasm_bindgen_toolchain(
+    name = "wasm_bindgen",
+    wasm_bindgen_cli = "@wasm_bindgen_cli//:wasm-bindgen-cli__wasm-bindgen",
+    visibility = ["//visibility:public"],
+)
+
+toolchain(
+    name = "wasm_bindgen_toolchain",
+    toolchain = ":wasm_bindgen",
+    toolchain_type = "@rules_rust_wasm_bindgen//:toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+exports_files([
+    "ompeval.BUILD.bazel",
+    "wasm_bindgen_cli.Cargo.lock",
+])

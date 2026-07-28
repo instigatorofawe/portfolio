@@ -244,6 +244,53 @@ jobs:
           path: liuran/build
           include-hidden-files: true
 
+  # The same pipeline through the alternative Bazel build (see README.md).
+  # Independent of the Nx jobs above and deliberately not a gate on `deploy`:
+  # Nx is the build that ships. This job's value is catching drift between the
+  # two, since Bazel builds every stage from source in one graph.
+  bazel:
+    runs-on: ubuntu-latest
+    env:
+      # Bazel's auto-detected C++ toolchain follows CC/CXX. lookups uses C++23
+      # <print>, which needs GCC 14's libstdc++ (same reason as `test-cpp`).
+      CC: gcc-14
+      CXX: g++-14
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install GCC 14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
+
+      # Reads .bazelversion, and caches the repository cache plus the disk
+      # cache so the C++ generators, the crate_universe fetches and the
+      # wasm-bindgen CLI build aren't repeated on every run.
+      - uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - name: Bazel tests
+        run: bazel test //...
+
+      # Builds the site end to end: C++ lookup generation -> heads-up WASM ->
+      # vite. The three-way tables are the committed ones (//lookups:threeway_lookups
+      # is tagged manual; a full solve takes 30+ minutes).
+      - name: Bazel build
+        run: bazel build //liuran:bundle
+
+      # Same guard as the `build` job: nothing in the Bazel graph should write
+      # into the source tree. crate_universe in particular will rewrite
+      # pushfold/Cargo.lock if its extension usage isn't isolated.
+      - name: Verify Bazel build did not modify tracked files
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::The Bazel build modified tracked files."
+            exit 1
+          fi
+
   # Deploys the site the `build` job produced, and only once every gate above
   # has passed — and only for pushes to main (never for pull requests).
   deploy:

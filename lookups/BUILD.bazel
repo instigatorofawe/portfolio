@@ -1,0 +1,112 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Mirrors PUSHFOLD_WARNING_FLAGS in CMakeLists.txt, which applies strict
+# warnings to our targets only. CMake additionally marks OMPEval SYSTEM so its
+# headers stay quiet; cc_library's `includes` emits -I rather than -isystem, so
+# the one diagnostic OMPEval's headers trip is suppressed by name instead.
+WARNING_FLAGS = [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Wno-implicit-const-int-float-conversion",
+    "-Wno-deprecated-copy-with-user-provided-copy",
+    "-Wno-unused-parameter",
+]
+
+cc_library(
+    name = "lookups",
+    hdrs = glob(
+        ["include/**/*.hpp"],
+        exclude = ["include/**/*Test.cpp"],
+    ),
+    includes = ["include"],
+    deps = ["@ompeval"],
+)
+
+cc_binary(
+    name = "generate_headsup_lookups",
+    srcs = ["src/Headsup/generate.cpp"],
+    copts = WARNING_FLAGS,
+    deps = [":lookups"],
+)
+
+cc_binary(
+    name = "generate_threeway_lookups",
+    srcs = ["src/Threeway/generate.cpp"],
+    copts = WARNING_FLAGS,
+    deps = [":lookups"],
+)
+
+cc_test(
+    name = "lookups_test",
+    size = "small",
+    srcs = glob(
+        [
+            "include/**/*Test.cpp",
+            "src/**/*Test.cpp",
+        ],
+        allow_empty = True,
+    ),
+    copts = WARNING_FLAGS,
+    deps = [
+        ":lookups",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "lookups_bench",
+    srcs = glob(["bench/**/*.cpp"]),
+    copts = WARNING_FLAGS,
+    tags = ["manual"],
+    deps = [
+        ":lookups",
+        "@google_benchmark//:benchmark_main",
+    ],
+)
+
+# --- Generated tables -------------------------------------------------------
+# The equivalents of Nx's generate-lookups / generate-hands targets. Outputs
+# are also committed to the tree (CI checks they haven't drifted); these
+# regenerate them from source.
+
+genrule(
+    name = "headsup_lookups",
+    outs = [
+        "headsup/hands.rs",
+        "headsup/headsup_equity.rs",
+        "headsup/headsup_matchup.rs",
+        "headsup/mod.rs",
+    ],
+    cmd = "$(execpath :generate_headsup_lookups) $(RULEDIR)/headsup rust",
+    tools = [":generate_headsup_lookups"],
+)
+
+genrule(
+    name = "hands_ts",
+    outs = ["ts/hands.ts"],
+    cmd = "$(execpath :generate_headsup_lookups) $(RULEDIR)/ts ts --hands",
+    tools = [":generate_headsup_lookups"],
+)
+
+# Tagged manual, and deliberately not a dependency of anything: the three-way
+# equity solve takes 30+ minutes. The committed tables under
+# pushfold/shared/src/generated/threeway are what the build actually consumes;
+# run this by hand when the generator changes.
+genrule(
+    name = "threeway_lookups",
+    outs = [
+        "threeway/hands.rs",
+        "threeway/mod.rs",
+        "threeway/threeway_equity.rs",
+        "threeway/threeway_matchup.rs",
+    ],
+    cmd = "$(execpath :generate_threeway_lookups) $(RULEDIR)/threeway rust",
+    tags = [
+        "manual",
+        "no-remote",
+    ],
+    tools = [":generate_threeway_lookups"],
+)

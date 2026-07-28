@@ -1,0 +1,16 @@
+exports_files([
+    "Cargo.lock",
+    "Cargo.toml",
+])
+
+alias(
+    name = "headsup_wasm_bindings",
+    actual = "//pushfold/headsup:wasm_bindings",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "threeway_wasm_bindings",
+    actual = "//pushfold/threeway:wasm_bindings",
+    visibility = ["//visibility:public"],
+)
