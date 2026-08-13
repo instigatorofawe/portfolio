@@ -117,6 +117,107 @@ Nx caching and the cmake/cargo incremental builds are separate layers:
 | `npx nx reset`                 | Wipe Nx's cache store and daemon                                   |
 | `pnpm rebuild`                 | Clear the Nx cache **and** the cmake/cargo build dirs, recompiling everything |
 
+## Bazel (alternative build)
+
+Nx is the primary build system; Bazel is an optional second one covering the
+same three stages. Both are checked in and neither depends on the other. Bazel
+builds every stage from source in one graph — it does not read the committed
+generated artifacts.
+
+| Command                                      | What it does                                             |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `bazel build //liuran:bundle`                | Full pipeline → static site in `bazel-bin/liuran/build`  |
+| `bazel run //liuran:dev`                     | Dev server on `:5173`, serving the Bazel-built WASM      |
+| `bazel test //...`                           | C++ (GoogleTest) and Rust test suites, ~13s              |
+| `bazel build //lookups:headsup_lookups`      | Generate the heads-up Rust tables                        |
+| `bazel build //lookups:hands_ts`             | Generate `hands.ts`                                      |
+| `bazel build //pushfold/headsup:wasm_bindings` | Heads-up solver → WASM + JS bindings                   |
+| `bazel run //lookups:lookups_bench`          | GoogleBenchmark suite (tagged `manual`)                  |
+
+`//lookups:threeway_lookups` is tagged `manual` and is not a dependency of
+anything: the three-way equity solve takes 30+ minutes. Like the Nx pipeline,
+the build consumes the committed three-way tables instead.
+
+### Dev server
+
+`bazel run //liuran:dev` works and serves the full app, including the WASM
+solvers and hand grid that Bazel built rather than the committed copies.
+
+It does **not** hot-reload on its own. `js_run_devserver` syncs the sources into
+a temp directory and vite watches that, not the repo, so edits in the working
+tree are invisible until the target is re-run. `ibazel run //liuran:dev` closes
+the loop — it re-runs on change and only the changed files are re-synced — but
+that needs [ibazel](https://github.com/bazelbuild/bazel-watcher) installed
+separately. For everyday editing `pnpm dev` is still the better loop; the Bazel
+target is for exercising the app against freshly built solver output.
+
+`bazel test //...` covers four targets: `//lookups:lookups_test` (the 99-case
+GoogleTest suite) and one Rust suite per crate. It does **not** cover the web
+tests — vitest browser mode and Playwright both need a hermetic Chromium, which
+isn't wired up; those still run via `pnpm test` and the `test-web` CI job.
+
+Two `.bazelrc` settings exist because Bazel's default `fastbuild` builds
+everything unoptimized, while both other build paths always optimize
+(`-DCMAKE_BUILD_TYPE=Release`, and `[profile.test] opt-level = 3` in
+`pushfold/Cargo.toml`). Without them the suite takes 216s instead of 13s — the
+C++ suite is 14x slower and the three-way Rust suite 36x. `--copt=-O2` and the
+rustc `-Copt-level=3` flag restore parity; override with `--copt=-O0` if you
+need a debuggable build.
+
+Notable differences from the Nx build, all of them deliberate:
+
+- **The WASM is not byte-identical to the committed `liuran/src/lib/pkg`.**
+  Bazel drives rustc directly rather than through `scripts/build-pushfold.sh`,
+  so it does not reproduce cargo's release profile (`lto`, `strip`) or its path
+  remapping. The output is functionally equivalent — the prerendered HTML
+  matches the Nx build exactly — but deploys should keep using `pnpm build`.
+- **`__LAST_COMMIT_DATE__` falls back to build time.** `vite.config.ts` shells
+  out to `git log`, and the sandbox has no `.git`; the existing `try/catch`
+  handles it. This is the one input that makes `//liuran:bundle` genuinely
+  non-reproducible: every re-execution of the action bakes in a different
+  timestamp. Bazel's cache hides it in practice, but a clean rebuild will not
+  match the previous one.
+
+### How hermetic is it?
+
+More hermetic than the Nx path in most respects, with one unchanged limit.
+
+Pinned and fetched by Bazel, so identical on every machine: the Rust toolchain
+(1.96.0, downloaded by rules_rust rather than taken from rustup), Node
+(24.9.0), the npm tree (pnpm lockfile), OMPEval (sha256), GoogleTest and
+GoogleBenchmark (BCR), and the wasm-bindgen CLI (0.2.125, built from source and
+pinned by `third_party/wasm_bindgen_cli.Cargo.lock`).
+
+Not hermetic: the **C++ toolchain**. Bazel auto-detects the system compiler, so
+`lookups` builds with Apple clang locally and gcc-14 on CI (hence the `CC`/`CXX`
+env in the `bazel` job). The tables it emits are unaffected — the existing
+`build` job already proves them stable across clang/macOS and gcc/Linux, since
+it regenerates them on Linux and fails on any diff.
+
+**The WASM is not reproducible across host platforms**, and Bazel does not fix
+this. rules_rust downloads the same rustc *version* per host but a
+host-specific *build* of it, which is exactly the variable behind the
+`*_bg.wasm` exclusion in the `build` job's drift check: rustc/LLVM order
+monomorphizations differently on macOS and Linux. Only the wasm32 stdlib
+component is shared between them.
+
+Verified same-host: two full builds in independent output bases (935 actions
+re-executed, wasm-bindgen CLI rebuilt from source) produce byte-identical
+`.wasm`.
+- **`liuran/vite.config.ts` sets `resolve.preserveSymlinks` under Bazel only**
+  (via the `BAZEL_VITE_PRESERVE_SYMLINKS` env var set in `liuran/BUILD.bazel`).
+  Without it, rolldown resolves Bazel's sandbox symlinks to their real paths and
+  keys the build manifest by `../../../execroot/...`, which SvelteKit then fails
+  to look up. It is off for the Nx build because it would break pnpm's
+  node_modules deduplication.
+- **`patches/sveltejs-kit-synthetic-descriptions.patch`** makes SvelteKit
+  tolerate missing `src/types/synthetic/$env+*.md` files. Bazel drops
+  tree-artifact entries whose names contain `$`, so those files never reach the
+  rules_js package store. They only supply doc comments on generated ambient
+  types.
+- **`public_hoist_packages` in `MODULE.bazel`** lists transitive deps that pnpm
+  reaches through its hidden hoist directory but rules_js does not link.
+
 ## Module details
 
 Each module has its own README with layout, standalone build/test/bench

@@ -1,0 +1,52 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_test")
+load("@rules_rust_wasm_bindgen//:defs.bzl", "rust_wasm_bindgen")
+
+exports_files(["Cargo.toml"])
+
+rust_shared_library(
+    name = "pushfold_headsup",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pushfold/shared:pushfold_shared",
+        "@crates//:nalgebra",
+        "@crates//:wasm-bindgen",
+    ],
+)
+
+# --remove-producers-section matches scripts/build-pushfold.sh: the section
+# records toolchain provenance that varies by build host, which would make the
+# emitted wasm differ between machines.
+rust_wasm_bindgen(
+    name = "wasm_bindings",
+    bindgen_flags = ["--remove-producers-section"],
+    out_name = "pushfold_headsup",
+    target = "bundler",
+    visibility = ["//visibility:public"],
+    wasm_file = ":pushfold_headsup",
+)
+
+# The tests pretty-print strategies with pushfold_shared::format_grid, which is
+# behind the `hands` feature. Cargo gets this from a dev-dependency feature; in
+# Bazel it needs a test-only variant of the crate wired to the hands-enabled
+# shared library, so the shipped WASM above still excludes the grid.
+rust_library(
+    name = "pushfold_headsup_with_hands",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    testonly = True,
+    crate_name = "pushfold_headsup",
+    deps = [
+        "//pushfold/shared:pushfold_shared_with_hands",
+        "@crates//:nalgebra",
+        "@crates//:wasm-bindgen",
+    ],
+)
+
+rust_test(
+    name = "pushfold_headsup_test",
+    size = "small",
+    crate = ":pushfold_headsup_with_hands",
+    edition = "2024",
+)

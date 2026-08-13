@@ -1,0 +1,98 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@aspect_rules_js//js:defs.bzl", "js_run_devserver")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//liuran:vite/package_json.bzl", vite_bin = "bin")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# The WASM bindings and the hand grid are committed to the tree as well (CI
+# checks they haven't drifted), but the Bazel graph builds them from source and
+# drops them where the app imports them from -- $lib/pkg/<solver> and
+# $lib/generated.
+copy_to_directory(
+    name = "pkg_headsup",
+    srcs = ["//pushfold:headsup_wasm_bindings"],
+    out = "src/lib/pkg/headsup",
+    root_paths = ["pushfold/headsup/wasm_bindings"],
+)
+
+copy_to_directory(
+    name = "pkg_threeway",
+    srcs = ["//pushfold:threeway_wasm_bindings"],
+    out = "src/lib/pkg/threeway",
+    root_paths = ["pushfold/threeway/wasm_bindings"],
+)
+
+genrule(
+    name = "generated_hands_ts",
+    srcs = ["//lookups:hands_ts"],
+    outs = ["src/lib/generated/hands.ts"],
+    cmd = "cp $(SRCS) $@",
+)
+
+# vite runs with chdir into this package, so every input has to live under
+# bazel-out/.../liuran -- hence copy_to_bin for the hand-written sources.
+copy_to_bin(
+    name = "app_srcs",
+    srcs = glob(
+        [
+            "src/**",
+            "static/**",
+        ],
+        exclude = [
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/lib/generated/**",
+            "src/lib/pkg/**",
+        ],
+    ) + [
+        "package.json",
+        "tsconfig.json",
+        "vite.config.ts",
+    ],
+)
+
+# adapter-static writes to `build/`, not `dist/` -- see the adapter config in
+# vite.config.ts. This is the directory `pnpm deploy` publishes.
+vite_bin.vite(
+    name = "bundle",
+    srcs = [
+        ":app_srcs",
+        ":generated_hands_ts",
+        ":node_modules",
+        ":pkg_headsup",
+        ":pkg_threeway",
+    ],
+    args = ["build"],
+    chdir = package_name(),
+    env = {"BAZEL_VITE_PRESERVE_SYMLINKS": "1"},
+    out_dirs = ["build"],
+    visibility = ["//visibility:public"],
+)
+
+# `bazel run //liuran:dev` -- the Bazel equivalent of `pnpm dev`. Serves the
+# Bazel-built WASM and hand grid rather than whatever is committed.
+#
+# Edits are NOT hot-reloaded: vite watches the copies under bazel-bin, not the
+# source tree. Re-run the target to pick up changes, or drive it with ibazel.
+# For day-to-day editing `pnpm dev` remains the better loop.
+js_run_devserver(
+    name = "dev",
+    args = ["dev"],
+    chdir = package_name(),
+    data = [
+        ":app_srcs",
+        ":generated_hands_ts",
+        ":node_modules",
+        ":pkg_headsup",
+        ":pkg_threeway",
+    ],
+    grant_sandbox_write_permissions = True,
+    tool = ":vite_binary",
+    visibility = ["//visibility:public"],
+)
+
+vite_bin.vite_binary(name = "vite_binary")

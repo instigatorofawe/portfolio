@@ -1,0 +1,49 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_test")
+load("@rules_rust_wasm_bindgen//:defs.bzl", "rust_wasm_bindgen")
+
+exports_files(["Cargo.toml"])
+
+rust_shared_library(
+    name = "pushfold_threeway",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pushfold/shared:pushfold_shared",
+        "@crates//:js-sys",
+        "@crates//:ndarray",
+        "@crates//:wasm-bindgen",
+    ],
+)
+
+rust_wasm_bindgen(
+    name = "wasm_bindings",
+    bindgen_flags = ["--remove-producers-section"],
+    out_name = "pushfold_threeway",
+    target = "bundler",
+    visibility = ["//visibility:public"],
+    wasm_file = ":pushfold_threeway",
+)
+
+# See the note in //pushfold/headsup: tests need the `hands` feature, the
+# shipped WASM must not have it.
+rust_library(
+    name = "pushfold_threeway_with_hands",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    testonly = True,
+    crate_name = "pushfold_threeway",
+    deps = [
+        "//pushfold/shared:pushfold_shared_with_hands",
+        "@crates//:js-sys",
+        "@crates//:ndarray",
+        "@crates//:wasm-bindgen",
+    ],
+)
+
+rust_test(
+    name = "pushfold_threeway_test",
+    size = "small",
+    crate = ":pushfold_threeway_with_hands",
+    edition = "2024",
+)

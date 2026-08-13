@@ -1,0 +1,33 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# Overlay for instigatorofawe/OMPEval (a fork of zekyll/OMPEval with macOS
+# fixes). Upstream ships a CMakeLists.txt and a Makefile; this replaces both.
+# Headers are included as <omp/...>, so the repo root is the include root.
+cc_library(
+    name = "ompeval",
+    srcs = [
+        "omp/CardRange.cpp",
+        "omp/CombinedRange.cpp",
+        "omp/EquityCalculator.cpp",
+        "omp/HandEvaluator.cpp",
+    ],
+    hdrs = [
+        "libdivide/libdivide.h",
+        "omp/CardRange.h",
+        "omp/CombinedRange.h",
+        "omp/Constants.h",
+        "omp/EquityCalculator.h",
+        "omp/Hand.h",
+        "omp/HandEvaluator.h",
+        "omp/OffsetTable.hxx",
+        "omp/Random.h",
+        "omp/Util.h",
+    ],
+    copts = ["-w"],
+    includes = ["."],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-lpthread"],
+    }),
+    visibility = ["//visibility:public"],
+)

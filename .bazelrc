@@ -1,0 +1,37 @@
+common --noenable_workspace
+
+# Required by the isolated crate_universe usage in MODULE.bazel.
+common --experimental_isolated_extension_usages
+
+# Required by aspect_rules_js.
+build --nolegacy_external_runfiles
+build --incompatible_strict_action_env
+
+build --cxxopt=-std=c++23
+build --host_cxxopt=-std=c++23
+
+# package.json always configures cmake with -DCMAKE_BUILD_TYPE=Release, so this
+# C++ is never usefully built unoptimized: the generators and the hand evaluator
+# are compute-bound template code, and Bazel's default fastbuild (-O0) makes the
+# test suite ~14x slower (56s vs 4s). Match cmake instead of paying that on every
+# `bazel test`. Override with --copt=-O0 when you need a debuggable build.
+build --copt=-O2
+build --host_copt=-O2
+
+# No OpenMP runtime in Bazel's cc toolchain; `#pragma omp` degrades to no-ops.
+build --cxxopt=-Wno-unknown-pragmas
+build --host_cxxopt=-Wno-unknown-pragmas
+
+# Keeps absolute paths to crate_universe sources out of rustc's panic-location
+# strings, same intent as the CARGO_HOME remap in scripts/build-pushfold.sh.
+# This does NOT make the wasm byte-identical to the cargo build or reproducible
+# across host platforms -- see the Bazel section in README.md.
+build --@rules_rust//rust/settings:extra_rustc_flag=--remap-path-prefix=external=/cargo
+
+# Mirrors `[profile.test] opt-level = 3` in pushfold/Cargo.toml: the three-way
+# solver's tests contract 169^3 tensors every CFR iteration, which is unusably
+# slow unoptimized. Bazel's fastbuild default made them 36x slower than cargo
+# (167s vs 4.6s).
+build --@rules_rust//rust/settings:extra_rustc_flag=-Copt-level=3
+
+try-import %workspace%/.bazelrc.user

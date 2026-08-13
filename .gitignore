@@ -4,3 +4,12 @@ node_modules
 # Nx cache
 .nx/cache
 .nx/workspace-data
+
+# Bazel convenience symlinks (bazel-portfolio matches the workspace dir name)
+/bazel-bin
+/bazel-out
+/bazel-portfolio
+/bazel-testlogs
+
+# Local Bazel overrides
+.bazelrc.user

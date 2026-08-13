@@ -1,0 +1,126 @@
+"""Bazel build for the portfolio monorepo, alongside the primary Nx build.
+
+Graph mirrors Nx: lookups (C++) -> pushfold (Rust/WASM) -> liuran (vite).
+"""
+
+module(
+    name = "portfolio",
+    version = "0.0.1",
+)
+
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+bazel_dep(name = "aspect_rules_js", version = "3.3.0")
+bazel_dep(name = "google_benchmark", version = "1.9.5")
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "rules_cc", version = "0.2.22")
+bazel_dep(name = "rules_nodejs", version = "6.7.3")
+bazel_dep(name = "rules_rust", version = "0.72.0")
+bazel_dep(name = "rules_rust_wasm_bindgen", version = "0.72.0")
+
+###############################################################################
+# JS / pnpm
+###############################################################################
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
+node.toolchain(node_version = "24.9.0")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm",
+    data = [
+        "//:package.json",
+        "//:pnpm-workspace.yaml",
+        "//liuran:package.json",
+    ],
+    npmrc = "//:.npmrc",
+    patch_args = {"*": ["-p1"]},
+    patches = {
+        "@sveltejs/kit": ["//patches:sveltejs-kit-synthetic-descriptions.patch"],
+    },
+    pnpm_lock = "//:pnpm-lock.yaml",
+    # SvelteKit's SSR bundle leaves svelte's runtime deps external and node
+    # resolves them from the output dir at prerender time. pnpm reaches them
+    # through its hidden hoist dir; rules_js links only direct deps, so these
+    # have to be hoisted explicitly.
+    # preserveSymlinks (see liuran/vite.config.ts) also stops rolldown from
+    # walking into pnpm's nested store, so transitive deps that the app's own
+    # dependencies import have to be hoisted next to them.
+    public_hoist_packages = {
+        "clsx": ["liuran"],
+        "devalue": ["liuran"],
+        "dompurify": ["liuran"],
+        "esm-env": ["liuran"],
+    },
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
+
+###############################################################################
+# Rust
+###############################################################################
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2024",
+    extra_target_triples = ["wasm32-unknown-unknown"],
+    versions = ["1.96.0"],  # keep in sync with rust-toolchain.toml
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//pushfold:Cargo.lock",
+    manifests = ["//pushfold:Cargo.toml"],
+)
+use_repo(crate, "crates")
+
+# rules_rust_wasm_bindgen ships wasm-bindgen 0.2.121; the workspace pins the
+# 0.2.125 crate, and the CLI aborts on a version mismatch. Build the matching
+# CLI from source and register it as the toolchain (see //third_party:wasm_bindgen).
+# isolate = True is load-bearing: without it this shares one extension instance
+# with the from_cargo above, the CLI's spec gets spliced into the pushfold
+# workspace resolution, and its entire dependency tree is written into
+# //pushfold:Cargo.lock.
+wasm_bindgen_crate = use_extension(
+    "@rules_rust//crate_universe:extensions.bzl",
+    "crate",
+    isolate = True,
+)
+wasm_bindgen_crate.spec(
+    package = "wasm-bindgen-cli",
+    version = "=0.2.125",
+)
+wasm_bindgen_crate.annotation(
+    crate = "wasm-bindgen-cli",
+    gen_binaries = ["wasm-bindgen"],
+    repositories = ["wasm_bindgen_cli"],
+)
+
+# Its own lockfile: without one this resolves against //pushfold:Cargo.lock and
+# writes the CLI's entire dependency tree into it.
+wasm_bindgen_crate.from_specs(
+    name = "wasm_bindgen_cli",
+    cargo_lockfile = "//third_party:wasm_bindgen_cli.Cargo.lock",
+)
+use_repo(wasm_bindgen_crate, "wasm_bindgen_cli")
+
+register_toolchains("//third_party:wasm_bindgen_toolchain")
+
+###############################################################################
+# C++ third-party
+###############################################################################
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Same commit as the FetchContent_Declare in lookups/CMakeLists.txt.
+http_archive(
+    name = "ompeval",
+    build_file = "//third_party:ompeval.BUILD.bazel",
+    sha256 = "dd6fb5ed2f82bac9a93ddc130038cd6698974d1f67d0e82b2c188dd6130ffb51",
+    strip_prefix = "OMPEval-1c5f82495017f2503b5fa57126c54c28309c3c7f",
+    url = "https://github.com/instigatorofawe/OMPEval/archive/1c5f82495017f2503b5fa57126c54c28309c3c7f.tar.gz",
+)
