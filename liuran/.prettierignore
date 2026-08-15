@@ -13,3 +13,6 @@ bun.lockb
 
 # Generated lookup tables (emitted by the lookups generate-hands step)
 /src/lib/generated/
+
+# Generated font subset (emitted by the generate-cjk-subset step)
+/src/lib/fonts/
