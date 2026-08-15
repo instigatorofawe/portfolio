@@ -1,9 +1,12 @@
 :root {
 	/* Type roles */
-	--font-serif: 'Source Serif 4', 'Noto Serif SC', Georgia, serif;
+	/* Families are self-hosted; see src/lib/styles/fonts.css. Fontsource names
+	   its variable builds '<Family> Variable' to keep them distinct from the
+	   static ones. */
+	--font-serif: 'Source Serif 4 Variable', 'Noto Serif SC', Georgia, serif;
 	--font-sans: 'Lato', 'Noto Serif SC', system-ui, sans-serif;
-	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
-	--font-display: 'Montserrat', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+	--font-display: 'Montserrat Variable', system-ui, sans-serif;
 
 	/* Color */
 	--bg: #fcfcfb;

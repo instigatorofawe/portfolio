@@ -1,0 +1,43 @@
+/*
+ * Self-hosted webfonts.
+ *
+ * These were previously loaded from fonts.googleapis.com via a render-blocking
+ * <link> in app.html. Serving them ourselves removes a third-party origin from
+ * the critical path — which matters mainly because fonts.googleapis.com is
+ * unreachable from mainland China, where the blocking stylesheet left readers
+ * of the Chinese-language essays staring at a blank page until the request
+ * timed out.
+ *
+ * The Latin families come from Fontsource; the variable builds cover the whole
+ * 200-900 weight range in a single file per subset, which is fewer bytes than
+ * the four static weights we used to request. Only Source Serif 4 needs an
+ * italic, matching what the old Google Fonts URL asked for.
+ */
+
+@import '@fontsource-variable/source-serif-4/index.css';
+@import '@fontsource-variable/source-serif-4/wght-italic.css';
+@import '@fontsource-variable/montserrat/index.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+@import '@fontsource/lato/400.css';
+@import '@fontsource/lato/700.css';
+
+/*
+ * Noto Serif SC, subset to the ~50 characters of Chinese that actually appear
+ * on the site (see scripts/generate-cjk-subset.mjs — rerun `pnpm fonts:cjk`
+ * after adding Chinese text). The full family is ~87MB unpacked; this is 19KB.
+ *
+ * The unicode-range covers whole CJK blocks rather than just the subsetted
+ * characters, so it stays correct as content changes: a character inside the
+ * range but absent from the file falls through to the next family in the stack
+ * (i.e. the reader's system CJK font) instead of rendering as tofu.
+ *
+ * Noto Serif SC is licensed OFL-1.1, which permits redistributing a subset.
+ */
+@font-face {
+	font-family: 'Noto Serif SC';
+	font-style: normal;
+	font-weight: 200 900;
+	font-display: swap;
+	src: url('../fonts/noto-serif-sc-subset.woff2') format('woff2');
+	unicode-range: U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
+}

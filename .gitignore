@@ -4,3 +4,8 @@ node_modules
 # Nx cache
 .nx/cache
 .nx/workspace-data
+
+/bazel-bin
+/bazel-out
+/bazel-portfolio
+/bazel-testlogs

@@ -10,6 +10,7 @@
 		"build:wasm:threeway": "nx build-threeway-wasm pushfold",
 		"lookups": "nx generate-lookups lookups",
 		"lookups:threeway": "nx generate-threeway-lookups lookups",
+		"fonts:cjk": "nx generate-cjk-subset liuran",
 		"clean:generated": "rm -rf pushfold/shared/src/generated/headsup liuran/src/lib/generated liuran/src/lib/pkg",
 		"clean": "nx reset && pnpm clean:generated && rm -rf lookups/build pushfold/target liuran/.svelte-kit liuran/build",
 		"rebuild": "pnpm clean && pnpm build",

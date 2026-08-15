@@ -7,6 +7,7 @@
 			"executor": "nx:run-commands",
 			"cache": true,
 			"dependsOn": [
+				"check-cjk-subset",
 				{ "projects": ["pushfold"], "target": "build-headsup-wasm" },
 				{ "projects": ["pushfold"], "target": "build-threeway-wasm" },
 				{ "projects": ["lookups"], "target": "generate-hands" }
@@ -15,6 +16,32 @@
 			"outputs": ["{projectRoot}/build", "{projectRoot}/.svelte-kit"],
 			"options": {
 				"command": "pnpm -C liuran build"
+			}
+		},
+
+		"check-cjk-subset": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"inputs": ["{projectRoot}/src/**/*", "{projectRoot}/scripts/generate-cjk-subset.mjs"],
+			"outputs": [],
+			"options": {
+				"command": "node liuran/scripts/generate-cjk-subset.mjs --check"
+			}
+		},
+
+		"generate-cjk-subset": {
+			"executor": "nx:run-commands",
+			"inputs": [
+				"{projectRoot}/src/**/*",
+				"!{projectRoot}/src/lib/fonts/**/*",
+				"{projectRoot}/scripts/generate-cjk-subset.mjs"
+			],
+			"outputs": [
+				"{projectRoot}/src/lib/fonts/noto-serif-sc-subset.woff2",
+				"{projectRoot}/src/lib/fonts/noto-serif-sc-subset.txt"
+			],
+			"options": {
+				"command": "node liuran/scripts/generate-cjk-subset.mjs"
 			}
 		}
 	}
