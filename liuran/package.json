@@ -43,7 +43,7 @@
 		"vitest-browser-svelte": "^3.0.0"
 	},
 	"dependencies": {
-		"isomorphic-dompurify": "^3.22.0",
+		"isomorphic-dompurify": "^4.1.0",
 		"@fontsource-variable/jetbrains-mono": "^5.3.0",
 		"@fontsource-variable/montserrat": "^5.3.0",
 		"@fontsource-variable/source-serif-4": "^5.3.0",
