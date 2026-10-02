@@ -4,6 +4,10 @@
 	import { navItems } from '#lib/config/navigation.js';
 
 	let { active = page.url.pathname } = $props();
+
+	// `active` is an absolute pathname ('/publications/'); nav hrefs are
+	// base-relative ('publications/'), apart from the root ('/').
+	const isActive = (href: string) => active === (href === '/' ? href : `/${href}`);
 </script>
 
 <nav>
@@ -11,8 +15,8 @@
 		{#each navItems as item (item.href)}
 			<a
 				href={resolve(item.href)}
-				class:active={active === item.href}
-				aria-current={active === item.href ? 'page' : undefined}
+				class:active={isActive(item.href)}
+				aria-current={isActive(item.href) ? 'page' : undefined}
 			>
 				{item.label}
 			</a>
