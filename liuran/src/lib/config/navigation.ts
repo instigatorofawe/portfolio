@@ -6,3 +6,7 @@ export const navItems = [
 	{ href: 'software/', label: 'software' },
 	{ href: 'essays/', label: 'essays' }
 ] as const;
+
+// The absolute URL pathname a nav href is served at ('publications/' ->
+// '/publications/'), i.e. what `page.url.pathname` reads on that page.
+export const toPathname = (href: string) => (href === '/' ? href : `/${href}`);

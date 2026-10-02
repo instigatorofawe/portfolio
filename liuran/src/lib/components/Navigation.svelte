@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { navItems } from '#lib/config/navigation.js';
+	import { navItems, toPathname } from '#lib/config/navigation.js';
 
 	let { active = page.url.pathname } = $props();
 
-	// `active` is an absolute pathname ('/publications/'); nav hrefs are
-	// base-relative ('publications/'), apart from the root ('/').
-	const isActive = (href: string) => active === (href === '/' ? href : `/${href}`);
+	const isActive = (href: string) => active === toPathname(href);
 </script>
 
 <nav>
