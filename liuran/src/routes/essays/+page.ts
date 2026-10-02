@@ -1,8 +1,8 @@
 import type { PageLoad } from './$types';
 import { parse } from 'yaml';
-import essays from '$lib/assets/essays.yml?raw';
-import { sanitizeHtml } from '$lib/sanitize';
-import type { Essay } from '$lib/components/EssaysTable.svelte';
+import essays from '#lib/assets/essays.yml?raw';
+import { sanitizeHtml } from '#lib/sanitize.js';
+import type { Essay } from '#lib/components/EssaysTable.svelte';
 
 export const load: PageLoad = () => {
 	// Titles carry inline HTML (e.g. <i>…</i>) that EssaysTable renders via

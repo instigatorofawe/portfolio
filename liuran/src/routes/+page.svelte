@@ -1,6 +1,6 @@
 <script lang="ts">
-	import bio from '$lib/assets/IMG_8559.jpg';
-	import SocialLinks from '$lib/components/SocialLinks.svelte';
+	import bio from '#lib/assets/IMG_8559.jpg';
+	import SocialLinks from '#lib/components/SocialLinks.svelte';
 
 	const lastUpdated = new Date(__LAST_COMMIT_DATE__).toLocaleDateString('en-US', {
 		year: 'numeric',

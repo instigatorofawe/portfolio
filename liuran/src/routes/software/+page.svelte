@@ -27,8 +27,9 @@
 	<ul class="software">
 		<li>
 			<p class="title">
-				<a href={resolve('/software/pushfold/')}>Push/fold heads-up Texas Hold'em solver</a>
+				<a href={resolve('software/pushfold/')}>Push/fold heads-up Texas Hold'em solver</a>
 			</p>
+
 			<p class="description">
 				A Nash equilibrium solver for the 2-player Push/Fold (all-in or fold preflop) subgame of
 				Texas Hold'em, written in Rust and compiled to WebAssembly. The game is solved via <a
@@ -41,8 +42,9 @@
 		</li>
 		<li>
 			<p class="title">
-				<a href={resolve('/software/threeway/')}>Push/fold three-way Texas Hold'em solver</a>
+				<a href={resolve('software/threeway/')}>Push/fold three-way Texas Hold'em solver</a>
 			</p>
+
 			<p class="description">
 				A CFR+ approximation of the 3-player Push/Fold subgame of Texas Hold'em, written in Rust and
 				compiled to WebAssembly. With three players CFR carries no convergence guarantee to a Nash

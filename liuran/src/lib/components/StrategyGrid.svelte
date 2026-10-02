@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { HANDS } from '$lib/generated/hands';
-	import { GRID_SIZE } from '$lib/pushfold/frequencies';
+	import { HANDS } from '#lib/generated/hands.js';
+	import { GRID_SIZE } from '#lib/pushfold/frequencies.js';
 
 	// Renders the 13x13 push/fold grid shared by every solver UI (heads-up,
 	// three-way, …). Markup is unstyled here on purpose: pushfold.css and

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Threeway from '$lib/components/Threeway.svelte';
+	import Threeway from '#lib/components/Threeway.svelte';
 </script>
 
 <svelte:head>

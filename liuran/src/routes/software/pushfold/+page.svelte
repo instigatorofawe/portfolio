@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Pushfold from '$lib/components/PushFold.svelte';
+	import Pushfold from '#lib/components/PushFold.svelte';
 </script>
 
 <svelte:head>
