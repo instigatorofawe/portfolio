@@ -3,7 +3,7 @@
 // iterations), which takes long enough to noticeably freeze the page if run
 // inline; a dedicated worker keeps input handling and layout responsive while
 // it churns.
-import { ThreewaySolver } from '$lib/pkg/threeway/pushfold_threeway';
+import { ThreewaySolver } from '#lib/pkg/threeway/pushfold_threeway.js';
 
 export type SolveRequest = {
 	id: number;

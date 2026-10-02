@@ -1,5 +1,5 @@
 <script lang="ts">
-	import EssaysTable from '$lib/components/EssaysTable.svelte';
+	import EssaysTable from '#lib/components/EssaysTable.svelte';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();
 </script>

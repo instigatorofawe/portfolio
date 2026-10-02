@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { navItems } from '$lib/config/navigation';
+	import { navItems } from '#lib/config/navigation.js';
 
 	let { active = page.url.pathname } = $props();
 </script>

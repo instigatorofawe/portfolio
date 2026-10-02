@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { computeFrequency } from '$lib/pushfold/frequencies';
-	import { formatPct, formatExploitability } from '$lib/pushfold/format';
-	import StrategyGrid from '$lib/components/StrategyGrid.svelte';
-	import '$lib/styles/pushfold.css';
-	import '$lib/styles/threeway.css';
+	import { computeFrequency } from '#lib/pushfold/frequencies.js';
+	import { formatPct, formatExploitability } from '#lib/pushfold/format.js';
+	import StrategyGrid from '#lib/components/StrategyGrid.svelte';
+	import '#lib/styles/pushfold.css';
+	import '#lib/styles/threeway.css';
 
 	const N_ITER = 1000;
 	// Solves settle within a few hundred ms of the last edit rather than
@@ -83,7 +83,9 @@
 		const w = new Worker(new URL('../workers/threeway.worker.ts', import.meta.url), {
 			type: 'module'
 		});
-		w.onmessage = (event: MessageEvent<import('$lib/workers/threeway.worker').SolveResponse>) => {
+		w.onmessage = (
+			event: MessageEvent<import('#lib/workers/threeway.worker.js').SolveResponse>
+		) => {
 			const data = event.data;
 			if (data.type === 'ready') {
 				// The wasm import has resolved; only now is it safe to post the

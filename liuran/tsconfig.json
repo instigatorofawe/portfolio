@@ -1,26 +1,15 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "$app/tsconfig",
 	"compilerOptions": {
-		// Teaches the editor's tsserver to resolve .svelte imports (incl. named
-		// type exports) via svelte2tsx instead of the default-export-only
-		// `declare module '*.svelte'` shim. Editor-only: tsc and svelte-check
-		// ignore `plugins`; VS Code also needs the Svelte extension's
-		// `svelte.enable-ts-plugin` setting on to load workspace TS plugins.
-		"plugins": [{ "name": "typescript-svelte-plugin" }],
+		"plugins": [
+			{
+				"name": "typescript-svelte-plugin"
+			}
+		],
 		"rewriteRelativeImportExtensions": true,
-		"allowJs": true,
-		"checkJs": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
 		"sourceMap": true,
-		"strict": true,
-		"moduleResolution": "bundler"
+		"strict": true
 	},
-	// `exclude` replaces (does not merge with) the extended config's, so the
-	// SvelteKit service-worker defaults are repeated here alongside the
-	// generated wasm-bindgen glue in src/lib/pkg, which isn't worth checking.
 	"exclude": [
 		"node_modules/**",
 		"src/service-worker.js",
@@ -30,10 +19,6 @@
 		"src/service-worker.d.ts",
 		"src/service-worker/**/*.d.ts",
 		"src/lib/pkg/**"
-	]
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// To make changes to top-level options such as include and exclude, we recommend extending
-	// the generated config; see https://svelte.dev/docs/kit/configuration#typescript
+	],
+	"include": ["src"]
 }
