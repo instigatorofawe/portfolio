@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { navItems } from '$lib/config/navigation';
+	import { navItems, toPathname } from '#lib/config/navigation.js';
 
 	let { active = page.url.pathname } = $props();
+
+	const isActive = (href: string) => active === toPathname(href);
 </script>
 
 <nav>
@@ -11,8 +13,8 @@
 		{#each navItems as item (item.href)}
 			<a
 				href={resolve(item.href)}
-				class:active={active === item.href}
-				aria-current={active === item.href ? 'page' : undefined}
+				class:active={isActive(item.href)}
+				aria-current={isActive(item.href) ? 'page' : undefined}
 			>
 				{item.label}
 			</a>

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import '$lib/styles/fonts.css';
-	import '$lib/styles/tokens.css';
-	import '$lib/styles/base.css';
-	import favicon from '$lib/assets/favicon.png';
-	import Navigation from '$lib/components/Navigation.svelte';
-	import Footer from '$lib/components/Footer.svelte';
+	import '#lib/styles/fonts.css';
+	import '#lib/styles/tokens.css';
+	import '#lib/styles/base.css';
+	import favicon from '#lib/assets/favicon.png';
+	import Navigation from '#lib/components/Navigation.svelte';
+	import Footer from '#lib/components/Footer.svelte';
 
 	let { children } = $props();
 </script>

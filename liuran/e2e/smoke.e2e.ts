@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import { parse } from 'yaml';
-import { navItems } from '../src/lib/config/navigation';
+import { navItems, toPathname } from '../src/lib/config/navigation';
 
 // End-to-end smoke tests: load the production build through `preview` and assert
 // that each route renders and the WASM-backed solver runs. These are intentionally
@@ -19,7 +19,10 @@ const pageMeta: Record<string, { title: string; heading: string }> = {
 	'/essays/': { title: 'Ran Liu - Essays', heading: 'Essays' }
 };
 
-const routes = navItems.map((item) => ({ path: item.href, ...pageMeta[item.href] }));
+const routes = navItems.map((item) => {
+	const path = toPathname(item.href);
+	return { path, ...pageMeta[path] };
+});
 
 // essays.yml is the single source of truth for the essays directory (same file the
 // app's loaders read), so the test stays in sync as essays are added or removed.

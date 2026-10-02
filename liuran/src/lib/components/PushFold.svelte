@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { computeFrequencies } from '$lib/pushfold/frequencies';
-	import { formatPct, formatExploitability } from '$lib/pushfold/format';
-	import StrategyGrid from '$lib/components/StrategyGrid.svelte';
-	import '$lib/styles/pushfold.css';
-	import '$lib/styles/headsup.css';
+	import { computeFrequencies } from '#lib/pushfold/frequencies.js';
+	import { formatPct, formatExploitability } from '#lib/pushfold/format.js';
+	import StrategyGrid from '#lib/components/StrategyGrid.svelte';
+	import '#lib/styles/pushfold.css';
+	import '#lib/styles/headsup.css';
 
-	type SolverModule = typeof import('$lib/pkg/headsup/pushfold_headsup');
+	type SolverModule = typeof import('#lib/pkg/headsup/pushfold_headsup.js');
 	type Solver = InstanceType<SolverModule['HeadsUpSolver']>;
 
 	const N_ITER = 1000;
@@ -29,7 +29,7 @@
 		// constructing a solver whose WASM memory nothing would ever free.
 		let cancelled = false;
 		let instance: Solver | null = null;
-		import('$lib/pkg/headsup/pushfold_headsup').then((m) => {
+		import('#lib/pkg/headsup/pushfold_headsup.js').then((m) => {
 			if (cancelled) return;
 			instance = new m.HeadsUpSolver();
 			solver = instance;
